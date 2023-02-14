@@ -1,0 +1,119 @@
+syntax = "proto3";
+
+package gps;
+
+message GGA{
+    fixed64 _inner_timestamp = 1;
+    bytes time = 2;
+    double latitude = 3;
+    bytes north_south = 4;
+    double longitude = 5;
+    bytes east_ovest = 6;
+    uint64 fix = 7;
+    uint64 satellites = 8;
+    double horizontal_diluition_precision = 9;
+    double altitude = 10;
+    double age_of_correction = 11;
+};
+
+message VTG{
+    fixed64 _inner_timestamp = 1;
+    double course_over_ground_degrees = 2;
+    double course_over_ground_degrees_magnetic = 3;
+    double speed_kmh = 4;
+};
+
+message GSA{
+    fixed64 _inner_timestamp = 1;
+    bytes mode = 2;
+    double position_diluition_precision = 3;
+    double horizontal_diluition_precision = 4;
+    double vertical_diluition_precision = 5;
+};
+
+message NAV_DOP{
+    fixed64 _inner_timestamp = 1;
+    uint64 iTOW = 2;
+    double gDOP = 3;
+    double pDOP = 4;
+    double tDOP = 5;
+    double vDOP = 6;
+    double hDOP = 7;
+    double nDOP = 8;
+    double eDOP = 9;
+};
+
+message NAV_PVT{
+    fixed64 _inner_timestamp = 1;
+    uint32 iTOW = 2;
+    uint32 year = 3;
+    uint32 month = 4;
+    uint32 day = 5;
+    uint32 hour = 6;
+    uint32 min = 7;
+    uint32 sec = 8;
+    uint32 valid = 9;
+    uint32 tAcc = 10;
+    sint32 nano = 11;
+    uint32 fixType = 12;
+    uint32 flags = 13;
+    uint32 flags2 = 14;
+    uint32 numSV = 15;
+    double lon = 16;
+    double lat = 17;
+    sint32 height = 18;
+    sint32 hMSL = 19;
+    uint32 hAcc = 20;
+    uint32 vAcc = 21;
+    sint32 velN = 22;
+    sint32 velE = 23;
+    sint32 velD = 24;
+    sint32 gSpeed = 25;
+    double headMot = 26;
+    uint32 sAcc = 27;
+    double headAcc = 28;
+    uint32 pDOP = 29;
+    double headVeh = 30;
+    double magDec = 31;
+    double magAcc = 32;
+};
+
+message NAV_HPPOSECEF{
+    fixed64 _inner_timestamp = 1;
+    uint32 version = 2;
+    uint32 iTOW = 3;
+    double ecefX = 4;
+    double ecefY = 5;
+    double ecefZ = 6;
+    sint32 ecefXHp = 7;
+    sint32 ecefYHp = 8;
+    sint32 ecefZHp = 9;
+    double pAcc = 10;
+};
+
+message NAV_HPPOSLLH{
+    fixed64 _inner_timestamp = 1;
+    uint32 version = 2;
+    uint32 iTOW = 3;
+    double lon = 4;
+    double lat = 5;
+    double height = 6;
+    double hMSL = 7;
+    sint32 lonHp = 8;
+    sint32 latHp = 9;
+    sint32 heightHp = 10;
+    sint32 hMSLHp = 11;
+    uint32 hAcc = 12;
+    uint32 vAcc = 13;
+};
+
+message GpsPack {
+	repeated GGA gga = 1;
+	repeated VTG vtg = 2;
+	repeated GSA gsa = 3;
+
+    repeated NAV_DOP dop = 4;
+    repeated NAV_PVT pvt = 5;
+    repeated NAV_HPPOSECEF hpposecef = 6;
+    repeated NAV_HPPOSLLH hpposllh = 7;
+}
