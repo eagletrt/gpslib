@@ -43,7 +43,7 @@ void gps_proto_serialize_from_match(gps_protocol_and_message &match,
     break;
   }
 }
-#define CANLIB_TIMESTAMP
+
 void gps_proto_deserialize(gps::GpsPack *proto, network_enums *net_enums,
                            network_signals *net_signals,
                            network_strings *net_strings, uint64_t resample_us) {
@@ -125,13 +125,13 @@ void gps_proto_deserialize(gps::GpsPack *proto, network_enums *net_enums,
     (*net_signals)["DOP"]["eDOP"].push(proto->dop(i).edop());
   }
   for (int i = 0; i < proto->pvt_size(); i++) {
-    #ifdef CANLIB_TIMESTAMP
+#ifdef CANLIB_TIMESTAMP
     static uint64_t last_timestamp = 0;
     if (proto->pvt(i)._inner_timestamp() - last_timestamp < resample_us)
       continue;
     else
       last_timestamp = proto->pvt(i)._inner_timestamp();
-    #endif // CANLIB_TIMESTAMP
+#endif // CANLIB_TIMESTAMP
     (*net_signals)["PVT"]["_timestamp"].push(proto->pvt(i)._inner_timestamp());
     (*net_signals)["PVT"]["iTOW"].push(proto->pvt(i).itow());
     (*net_signals)["PVT"]["year"].push(proto->pvt(i).year());
@@ -166,14 +166,15 @@ void gps_proto_deserialize(gps::GpsPack *proto, network_enums *net_enums,
     (*net_signals)["PVT"]["magAcc"].push(proto->pvt(i).magacc());
   }
   for (int i = 0; i < proto->hpposecef_size(); i++) {
-    #ifdef CANLIB_TIMESTAMP
+#ifdef CANLIB_TIMESTAMP
     static uint64_t last_timestamp = 0;
     if (proto->hpposecef(i)._inner_timestamp() - last_timestamp < resample_us)
       continue;
     else
       last_timestamp = proto->hpposecef(i)._inner_timestamp();
-    #endif // CANLIB_TIMESTAMP
-    (*net_signals)["HPPOSECEF"]["_timestamp"].push(proto->hpposecef(i)._inner_timestamp());
+#endif // CANLIB_TIMESTAMP
+    (*net_signals)["HPPOSECEF"]["_timestamp"].push(
+        proto->hpposecef(i)._inner_timestamp());
     (*net_signals)["HPPOSECEF"]["version"].push(proto->hpposecef(i).version());
     (*net_signals)["HPPOSECEF"]["iTOW"].push(proto->hpposecef(i).itow());
     (*net_signals)["HPPOSECEF"]["ecefX"].push(proto->hpposecef(i).ecefx());
@@ -185,14 +186,15 @@ void gps_proto_deserialize(gps::GpsPack *proto, network_enums *net_enums,
     (*net_signals)["HPPOSECEF"]["pAcc"].push(proto->hpposecef(i).pacc());
   }
   for (int i = 0; i < proto->hpposllh_size(); i++) {
-    #ifdef CANLIB_TIMESTAMP
+#ifdef CANLIB_TIMESTAMP
     static uint64_t last_timestamp = 0;
     if (proto->hpposllh(i)._inner_timestamp() - last_timestamp < resample_us)
       continue;
     else
       last_timestamp = proto->hpposllh(i)._inner_timestamp();
-    #endif // CANLIB_TIMESTAMP
-    (*net_signals)["HPPOSLLH"]["_timestamp"].push(proto->hpposllh(i)._inner_timestamp());
+#endif // CANLIB_TIMESTAMP
+    (*net_signals)["HPPOSLLH"]["_timestamp"].push(
+        proto->hpposllh(i)._inner_timestamp());
     (*net_signals)["HPPOSLLH"]["version"].push(proto->hpposllh(i).version());
     (*net_signals)["HPPOSLLH"]["iTOW"].push(proto->hpposllh(i).itow());
     (*net_signals)["HPPOSLLH"]["lon"].push(proto->hpposllh(i).lon());

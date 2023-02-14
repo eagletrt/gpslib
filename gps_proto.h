@@ -7,18 +7,6 @@ extern "C" {
 
 #include "common_types.h"
 
-// typedef struct gps_proto_pack{
-//     // NMEA
-//     canlib_circular_buffer<gps_nmea_gga_t, 1000> gga;
-//     canlib_circular_buffer<gps_nmea_vtg_t, 1000> vtg;
-//     canlib_circular_buffer<gps_nmea_gsa_t, 1000> gsa;
-//     // UBX
-//     canlib_circular_buffer<gps_ubx_dop_t, 1000> dop;
-//     canlib_circular_buffer<gps_ubx_pvt_t, 1000> pvt;
-//     canlib_circular_buffer<gps_ubx_hpposecef_t, 1000> hpposecef;
-//     canlib_circular_buffer<gps_ubx_hpposllh_t, 1000> hpposllh;
-// }gps_proto_pack;
-
 void gps_proto_serialize_from_match(gps_protocol_and_message &match,
                                     gps::GpsPack *proto,
                                     gps_parsed_data_t *data);

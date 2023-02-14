@@ -3,31 +3,28 @@
 
 #ifndef CANLIB_CIRCULAR_BUFFER
 #define CANLIB_CIRCULAR_BUFFER
-#include <stdlib.h>
 #include <inttypes.h>
+#include <stdlib.h>
 
 namespace Helper {
-template <bool FITS8, bool FITS16>
-struct Index {
+template <bool FITS8, bool FITS16> struct Index {
   using Type = uint32_t;
 };
 
-template <>
-struct Index<false, true> {
+template <> struct Index<false, true> {
   using Type = uint16_t;
 };
 
-template <>
-struct Index<true, true> {
+template <> struct Index<true, true> {
   using Type = uint8_t;
 };
-}  // namespace Helper
+} // namespace Helper
 
 template <typename T, size_t S,
           typename IT =
               typename Helper::Index<(S <= UINT8_MAX), (S <= UINT16_MAX)>::Type>
 class canlib_circular_buffer {
- public:
+public:
   static constexpr IT capacity = static_cast<IT>(S);
 
   using index_t = IT;
@@ -42,10 +39,10 @@ class canlib_circular_buffer {
   bool push(T value);
   T shift();
   T pop();
-  const T& start() const;
+  const T &start() const;
   T inline first() const;
   T inline last() const;
-  const T& operator[](IT index) const;
+  const T &operator[](IT index) const;
   IT inline size() const;
   IT inline available() const;
   bool inline empty() const;
@@ -53,8 +50,7 @@ class canlib_circular_buffer {
   void inline clear();
   size_t inline offset() const;
 
-
- private:
+private:
   T buffer[S];
   T *head;
   T *tail;
@@ -111,7 +107,8 @@ bool canlib_circular_buffer<T, S, IT>::push(T value) {
 
 template <typename T, size_t S, typename IT>
 T canlib_circular_buffer<T, S, IT>::shift() {
-  if (count == 0) return *head;
+  if (count == 0)
+    return *head;
   T result = *head++;
   if (head >= buffer + capacity) {
     head = buffer;
@@ -122,7 +119,8 @@ T canlib_circular_buffer<T, S, IT>::shift() {
 
 template <typename T, size_t S, typename IT>
 T canlib_circular_buffer<T, S, IT>::pop() {
-  if (count == 0) return *tail;
+  if (count == 0)
+    return *tail;
   T result = *tail--;
   if (tail < buffer) {
     tail = buffer + capacity - 1;
@@ -142,13 +140,14 @@ T inline canlib_circular_buffer<T, S, IT>::last() const {
 }
 
 template <typename T, size_t S, typename IT>
-const T& canlib_circular_buffer<T, S, IT>::start() const {
+const T &canlib_circular_buffer<T, S, IT>::start() const {
   return buffer[1];
 }
 
 template <typename T, size_t S, typename IT>
-const T& canlib_circular_buffer<T, S, IT>::operator[](IT index) const {
-  if (index >= count) return *tail;
+const T &canlib_circular_buffer<T, S, IT>::operator[](IT index) const {
+  if (index >= count)
+    return *tail;
   return *(buffer + ((head - buffer + index) % capacity));
 }
 
@@ -185,10 +184,9 @@ size_t inline canlib_circular_buffer<T, S, IT>::offset() const {
 
 #endif // CANLIB_CIRCULAR_BUFFER
 
-
 #ifndef CANLIB_CIRCULAR_BUFFER_SIZE
 #define CANLIB_CIRCULAR_BUFFER_SIZE 2000
-#endif//CANLIB_CIRCULAR_BUFFER_SIZE
+#endif // CANLIB_CIRCULAR_BUFFER_SIZE
 
 #ifndef CANLIB_PROTO_INTERFACE_TYPES
 #define CANLIB_PROTO_INTERFACE_TYPES
@@ -196,30 +194,33 @@ size_t inline canlib_circular_buffer<T, S, IT>::offset() const {
 #include <string>
 #include <unordered_map>
 /**
-*  Use network_<> to get all the values from the protobuffer.
-*  Every network can be consensed into one network_<> as all the
-*  messages names are unique.
-**/
+ *  Use network_<> to get all the values from the protobuffer.
+ *  Every network can be consensed into one network_<> as all the
+ *  messages names are unique.
+ **/
 
 typedef std::string field_name;
 typedef std::string messages_name;
-typedef canlib_circular_buffer<double,      CANLIB_CIRCULAR_BUFFER_SIZE> double_buffer;
-typedef canlib_circular_buffer<uint64_t,    CANLIB_CIRCULAR_BUFFER_SIZE> uint64_buffer;
-typedef canlib_circular_buffer<std::string, CANLIB_CIRCULAR_BUFFER_SIZE> string_buffer;
+typedef canlib_circular_buffer<double, CANLIB_CIRCULAR_BUFFER_SIZE>
+    double_buffer;
+typedef canlib_circular_buffer<uint64_t, CANLIB_CIRCULAR_BUFFER_SIZE>
+    uint64_buffer;
+typedef canlib_circular_buffer<std::string, CANLIB_CIRCULAR_BUFFER_SIZE>
+    string_buffer;
 
 // structure contains all the messages with a enum value associated
 // the type is unified to uint64_t
-typedef std::unordered_map<field_name,    uint64_buffer> message_enums;
+typedef std::unordered_map<field_name, uint64_buffer> message_enums;
 typedef std::unordered_map<messages_name, message_enums> network_enums;
 
 // structure contains all the messages with a signal associated
 // the type is unified to double
-typedef std::unordered_map<field_name,    double_buffer>   message_signals;
+typedef std::unordered_map<field_name, double_buffer> message_signals;
 typedef std::unordered_map<messages_name, message_signals> network_signals;
 
 // structure contains all the messages with a string associated
 // the type is unified to string
-typedef std::unordered_map<field_name,    string_buffer>   message_strings;
+typedef std::unordered_map<field_name, string_buffer> message_strings;
 typedef std::unordered_map<messages_name, message_strings> network_strings;
 
 #endif // CANLIB_PROTO_INTERFACE_TYPES
