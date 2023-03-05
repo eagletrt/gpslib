@@ -46,6 +46,9 @@ int gps_interface_open_file(gps_serial_port* new_serial_port, const char* filena
 
     new_serial_port->fd = open(filename, O_RDONLY);
 
+    if (new_serial_port->fd == -1)
+        return -1;  // Error
+
     new_serial_port->open = 1;
     new_serial_port->last_timestamp = UINT64_MAX-1;
     return 0;
