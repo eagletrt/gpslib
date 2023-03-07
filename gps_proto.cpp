@@ -9,17 +9,17 @@ void gps_proto_serialize_from_match(gps_protocol_and_message& match, gps::GpsPac
             switch (match.message)
             {
                 case GPS_NMEA_TYPE_GGA:
-                    // if((1.0e6 / downsample_rate) > (timestamp - timers_gps["gga"])) break;
+                    if(downsample_rate && (1.0e6 / downsample_rate) > (timestamp - timers_gps["gga"])) break;
                     gps_serialize_gga(proto->add_gga(), &data->gga);
                     timers_gps["gga"] = timestamp;
                     break;
                 case GPS_NMEA_TYPE_VTG:
-                    // if((1.0e6 / downsample_rate) > (timestamp - timers_gps["vtg"])) break;
+                    if(downsample_rate && (1.0e6 / downsample_rate) > (timestamp - timers_gps["vtg"])) break;
                     gps_serialize_vtg(proto->add_vtg(), &data->vtg);
                     timers_gps["vtg"] = timestamp;
                     break;
                 case GPS_NMEA_TYPE_GSA:
-                    // if((1.0e6 / downsample_rate) > (timestamp - timers_gps["gsa"])) break;
+                    if(downsample_rate && (1.0e6 / downsample_rate) > (timestamp - timers_gps["gsa"])) break;
                     gps_serialize_gsa(proto->add_gsa(), &data->gsa);
                     timers_gps["gsa"] = timestamp;
                     break;
@@ -31,22 +31,22 @@ void gps_proto_serialize_from_match(gps_protocol_and_message& match, gps::GpsPac
             switch (match.message)
             {
                 case GPS_UBX_TYPE_NAV_DOP:
-                    // if((1.0e6 / downsample_rate) > (timestamp - timers_gps["dop"])) break;
+                    if(downsample_rate && (1.0e6 / downsample_rate) > (timestamp - timers_gps["dop"])) break;
                     gps_serialize_dop(proto->add_dop(), &data->dop);
                     timers_gps["dop"] = timestamp;
                 break;
                 case GPS_UBX_TYPE_NAV_PVT:
-                    // if((1.0e6 / downsample_rate) > (timestamp - timers_gps["pvt"])) break;
+                    if(downsample_rate && (1.0e6 / downsample_rate) > (timestamp - timers_gps["pvt"])) break;
                     gps_serialize_pvt(proto->add_pvt(), &data->pvt);
                     timers_gps["pvt"] = timestamp;
                 break;
                 case GPS_UBX_TYPE_NAV_HPPOSECEF:
-                    // if((1.0e6 / downsample_rate) > (timestamp - timers_gps["hpposecef"])) break;
+                    if(downsample_rate && (1.0e6 / downsample_rate) > (timestamp - timers_gps["hpposecef"])) break;
                     gps_serialize_hpposecef(proto->add_hpposecef(), &data->hpposecef);
                     timers_gps["hpposecef"] = timestamp;
                 break;
                 case GPS_UBX_TYPE_NAV_HPPOSLLH:
-                    // if((1.0e6 / downsample_rate) > (timestamp - timers_gps["hpposllh"])) break;
+                    if(downsample_rate && (1.0e6 / downsample_rate) > (timestamp - timers_gps["hpposllh"])) break;
                     gps_serialize_hpposllh(proto->add_hpposllh(), &data->hpposllh);
                     timers_gps["hpposllh"] = timestamp;
                 break;
