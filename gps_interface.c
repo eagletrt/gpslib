@@ -8,6 +8,9 @@
 #include <inttypes.h>
 #include <sys/time.h>
 
+#define CLK_A 0x00
+#define CLK_B 0x0A
+
 uint64_t gps_get_timestamp(gps_serial_port* port) {
 
     if (port == NULL)
@@ -126,7 +129,7 @@ gps_protocol_type gps_interface_get_line(gps_serial_port* port, char start_seque
     uint8_t c;
     int size = -1;
     *line_size = size;
-    int cr = 0; // flag for <CR> termination byte (NMEA protocol)
+    int previous_clk_a = 0; // flag for <CR> termination byte (NMEA protocol)
     int ubx_message_size = 0;
     gps_protocol_type type = GPS_PROTOCOL_TYPE_SIZE;
 
@@ -185,14 +188,14 @@ gps_protocol_type gps_interface_get_line(gps_serial_port* port, char start_seque
         }
 
         if(type == GPS_PROTOCOL_TYPE_NMEA){
-            if(c == 0x0D){  // <CR> termination byte
-                cr = 1;
+            if(c == CLK_A){  // CLK_A termination byte
+                previous_clk_a = 1;
             }
-            else if(c == 0x0A && (cr == 1 || cr == 0)){ // <LF> termination byte
-                size -= 2;    // because line is not updated with <CR> and <LF>
+            else if(c == CLK_B && previous_clk_a == 1){ // CLK_B termination byte
+                size -= 2;    // because line is not updated with CLK_A and CLK_B
                 break;
             } else {
-                cr = 0;
+                previous_clk_a = 0;
                 line[size] = c;
             }
         }else if(type == GPS_PROTOCOL_TYPE_UBX){
