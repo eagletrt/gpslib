@@ -58,172 +58,172 @@ void gps_proto_serialize_from_match(gps_protocol_and_message& match, gps::GpsPac
         break;
     }
 }
-void gps_proto_deserialize(gps::GpsPack* proto, gps_proto_pack* pack, uint64_t resample_us){
-    for(int i = 0; i < proto->gga_size(); i++){
-        static gps_nmea_gga_t instance;
-        static uint64_t last_timestamp = 0;
 
-        instance._timestamp = proto->gga(i)._inner_timestamp();
-        if(instance._timestamp - last_timestamp < resample_us)
-            continue;
-        else
-            last_timestamp = instance._timestamp;
-        //if(proto->gga(i).time().size() > 0)
-        //    memcpy(instance.time, proto->gga(i).time().c_str(), 9);
-        instance.latitude = proto->gga(i).latitude();
-        //instance.north_south = proto->gga(i).north_south()[0];
-        instance.longitude = proto->gga(i).longitude();
-        //instance.east_ovest = proto->gga(i).east_ovest()[0];
-        instance.fix = proto->gga(i).fix();
-        instance.satellites = proto->gga(i).satellites();
-        instance.horizontal_diluition_precision = proto->gga(i).horizontal_diluition_precision();
-        //instance.fix_state = FIX_STATE[proto->gga(i).fix()];
-        instance.altitude = proto->gga(i).altitude();
-        instance.age_of_correction = proto->gga(i).age_of_correction();
-        pack->gga.push(instance);
-    }
-    for(int i = 0; i < proto->vtg_size(); i++){
-        static gps_nmea_vtg_t instance;
-        static uint64_t last_timestamp = 0;
+void gps_proto_deserialize(gps::GpsPack *proto, network_enums *net_enums,
+                           network_signals *net_signals,
+                           network_strings *net_strings, uint64_t resample_us) {
+  char buffer[1024];
+  for (int i = 0; i < proto->gga_size(); i++) {
+#ifdef CANLIB_TIMESTAMP
+    static uint64_t last_timestamp = 0;
+    if (proto->gga(i)._inner_timestamp() - last_timestamp < resample_us)
+      continue;
+    else
+      last_timestamp = proto->gga(i)._inner_timestamp();
+    (*net_signals)["GGA"]["_timestamp"].push(proto->gga(i)._inner_timestamp());
+#endif // CANLIB_TIMESTAMP
+    (*net_strings)["GGA"]["time"].push(
+        std::string(proto->gga(i).time().c_str(), 9));
+    (*net_signals)["GGA"]["latitude"].push(proto->gga(i).latitude());
+    (*net_strings)["GGA"]["north_south"].push(proto->gga(i).north_south());
+    (*net_signals)["GGA"]["longitude"].push(proto->gga(i).longitude());
+    (*net_strings)["GGA"]["east_ovest"].push(proto->gga(i).east_ovest());
+    (*net_signals)["GGA"]["fix"].push(proto->gga(i).fix());
+    (*net_signals)["GGA"]["satellites"].push(proto->gga(i).satellites());
+    (*net_signals)["GGA"]["horizontal_diluition_precision"].push(
+        proto->gga(i).horizontal_diluition_precision());
+    (*net_enums)["GGA"]["fix_state"].push(proto->gga(i).fix());
+    (*net_strings)["GGA"]["fix_state"].push(FIX_STATE[proto->gga(i).fix()]);
+    (*net_signals)["GGA"]["altitude"].push(proto->gga(i).altitude());
+    (*net_signals)["GGA"]["age_of_correction"].push(
+        proto->gga(i).age_of_correction());
+  }
+  for (int i = 0; i < proto->vtg_size(); i++) {
+#ifdef CANLIB_TIMESTAMP
+    static uint64_t last_timestamp = 0;
+    if (proto->vtg(i)._inner_timestamp() - last_timestamp < resample_us)
+      continue;
+    else
+      last_timestamp = proto->vtg(i)._inner_timestamp();
+    (*net_signals)["VTG"]["_timestamp"].push(proto->vtg(i)._inner_timestamp());
+#endif // CANLIB_TIMESTAMP
+    (*net_signals)["VTG"]["course_over_ground_degrees"].push(
+        proto->vtg(i).course_over_ground_degrees());
+    (*net_signals)["VTG"]["course_over_ground_degrees_magnetic"].push(
+        proto->vtg(i).course_over_ground_degrees_magnetic());
+    (*net_signals)["VTG"]["speed_kmh"].push(proto->vtg(i).speed_kmh());
+  }
+  for (int i = 0; i < proto->gsa_size(); i++) {
+#ifdef CANLIB_TIMESTAMP
+    static uint64_t last_timestamp = 0;
+    if (proto->gsa(i)._inner_timestamp() - last_timestamp < resample_us)
+      continue;
+    else
+      last_timestamp = proto->gsa(i)._inner_timestamp();
+    (*net_signals)["GSA"]["_timestamp"].push(proto->gsa(i)._inner_timestamp());
+#endif // CANLIB_TIMESTAMP
+    (*net_strings)["GSA"]["mode"].push(proto->gsa(i).mode());
+    (*net_signals)["GSA"]["position_diluition_precision"].push(
+        proto->gsa(i).position_diluition_precision());
+    (*net_signals)["GSA"]["horizontal_diluition_precision"].push(
+        proto->gsa(i).horizontal_diluition_precision());
+    (*net_signals)["GSA"]["vertical_diluition_precision"].push(
+        proto->gsa(i).vertical_diluition_precision());
+  }
 
-        instance._timestamp = proto->vtg(i)._inner_timestamp();
-        if(instance._timestamp - last_timestamp < resample_us)
-            continue;
-        else
-            last_timestamp = instance._timestamp;
-
-        instance.course_over_ground_degrees = proto->vtg(i).course_over_ground_degrees();
-        instance.course_over_ground_degrees_magnetic = proto->vtg(i).course_over_ground_degrees_magnetic();
-        instance.speed_kmh = proto->vtg(i).speed_kmh();
-        pack->vtg.push(instance);
-    }
-    for(int i = 0; i < proto->gsa_size(); i++){
-        static gps_nmea_gsa_t instance;
-        static uint64_t last_timestamp = 0;
-
-        instance._timestamp= proto->gsa(i)._inner_timestamp();
-        if(instance._timestamp - last_timestamp < resample_us)
-            continue;
-        else
-            last_timestamp = instance._timestamp;
-
-        //instance.mode = proto->gsa(i).mode()[0];
-        instance.position_diluition_precision = proto->gsa(i).position_diluition_precision();
-        instance.horizontal_diluition_precision = proto->gsa(i).horizontal_diluition_precision();
-        instance.vertical_diluition_precision = proto->gsa(i).vertical_diluition_precision();
-        pack->gsa.push(instance);
-    }
-
-    for(int i = 0; i < proto->dop_size(); i++){
-        static gps_ubx_dop_t instance;
-        static uint64_t last_timestamp = 0;
-
-        instance._timestamp = proto->dop(i)._inner_timestamp();
-        if(instance._timestamp - last_timestamp < resample_us)
-            continue;
-        else
-            last_timestamp = instance._timestamp;
-
-        instance.iTOW = proto->dop(i).itow();
-        instance.gDOP = proto->dop(i).gdop();
-        instance.pDOP = proto->dop(i).pdop();
-        instance.tDOP = proto->dop(i).tdop();
-        instance.vDOP = proto->dop(i).vdop();
-        instance.hDOP = proto->dop(i).hdop();
-        instance.nDOP = proto->dop(i).ndop();
-        instance.eDOP = proto->dop(i).edop();
-        pack->dop.push(instance);
-    }
-    for(int i = 0; i < proto->pvt_size(); i++){
-        static gps_ubx_pvt_t instance;
-        static uint64_t last_timestamp = 0;
-
-        instance._timestamp = proto->pvt(i)._inner_timestamp();
-        if(instance._timestamp - last_timestamp < resample_us)
-            continue;
-        else
-            last_timestamp = instance._timestamp;
-
-        instance.iTOW = proto->pvt(i).itow();
-        instance.year = proto->pvt(i).year();
-        instance.month = proto->pvt(i).month();
-        instance.day = proto->pvt(i).day();
-        instance.hour = proto->pvt(i).hour();
-        instance.min = proto->pvt(i).min();
-        instance.sec = proto->pvt(i).sec();
-        instance.valid = proto->pvt(i).valid();
-        instance.tAcc = proto->pvt(i).tacc();
-        instance.nano = proto->pvt(i).nano();
-        instance.fixType = proto->pvt(i).fixtype();
-        instance.flags = proto->pvt(i).flags();
-        instance.flags2 = proto->pvt(i).flags2();
-        instance.numSV = proto->pvt(i).numsv();
-        instance.lon = proto->pvt(i).lon();
-        instance.lat = proto->pvt(i).lat();
-        instance.height = proto->pvt(i).height();
-        instance.hMSL = proto->pvt(i).hmsl();
-        instance.hAcc = proto->pvt(i).hacc();
-        instance.vAcc = proto->pvt(i).vacc();
-        instance.velN = proto->pvt(i).veln();
-        instance.velE = proto->pvt(i).vele();
-        instance.velD = proto->pvt(i).veld();
-        instance.gSpeed = proto->pvt(i).gspeed();
-        instance.headMot = proto->pvt(i).headmot();
-        instance.sAcc = proto->pvt(i).sacc();
-        instance.headAcc = proto->pvt(i).headacc();
-        instance.pDOP = proto->pvt(i).pdop();
-        instance.headVeh = proto->pvt(i).headveh();
-        instance.magDec = proto->pvt(i).magdec();
-        instance.magAcc = proto->pvt(i).magacc();
-        pack->pvt.push(instance);
-    }
-    for(int i = 0; i < proto->hpposecef_size(); i++){
-        static gps_ubx_hpposecef_t instance;
-        static uint64_t last_timestamp = 0;
-
-        instance._timestamp = proto->hpposecef(i)._inner_timestamp();
-        if(instance._timestamp - last_timestamp < resample_us)
-            continue;
-        else
-            last_timestamp = instance._timestamp;
-
-        instance.version = proto->hpposecef(i).version();
-        instance.iTOW = proto->hpposecef(i).itow();
-        instance.ecefX = proto->hpposecef(i).ecefx();
-        instance.ecefY = proto->hpposecef(i).ecefy();
-        instance.ecefZ = proto->hpposecef(i).ecefz();
-        instance.ecefXHp = proto->hpposecef(i).ecefxhp();
-        instance.ecefYHp = proto->hpposecef(i).ecefyhp();
-        instance.ecefZHp = proto->hpposecef(i).ecefzhp();
-        instance.pAcc = proto->hpposecef(i).pacc();
-        pack->hpposecef.push(instance);
-    }
-    for(int i = 0; i < proto->hpposllh_size(); i++){
-        static gps_ubx_hpposllh_t instance;
-        static uint64_t last_timestamp = 0;
-
-        instance._timestamp = proto->hpposllh(i)._inner_timestamp();
-        if(instance._timestamp - last_timestamp < resample_us)
-            continue;
-        else
-            last_timestamp = instance._timestamp;
-
-        instance.version = proto->hpposllh(i).version();
-        instance.iTOW = proto->hpposllh(i).itow();
-        instance.lon = proto->hpposllh(i).lon();
-        instance.lat = proto->hpposllh(i).lat();
-        instance.height = proto->hpposllh(i).height();
-        instance.hMSL = proto->hpposllh(i).hmsl();
-        instance.lonHp = proto->hpposllh(i).lonhp();
-        instance.latHp = proto->hpposllh(i).lathp();
-        instance.heightHp = proto->hpposllh(i).heighthp();
-        instance.hMSLHp = proto->hpposllh(i).hmslhp();
-        instance.hAcc = proto->hpposllh(i).hacc();
-        instance.vAcc = proto->hpposllh(i).vacc();
-        pack->hpposllh.push(instance);
-    }
+  for (int i = 0; i < proto->dop_size(); i++) {
+#ifdef CANLIB_TIMESTAMP
+    static uint64_t last_timestamp = 0;
+    if (proto->dop(i)._inner_timestamp() - last_timestamp < resample_us)
+      continue;
+    else
+      last_timestamp = proto->dop(i)._inner_timestamp();
+#endif // CANLIB_TIMESTAMP
+    (*net_signals)["DOP"]["_timestamp"].push(proto->dop(i)._inner_timestamp());
+    (*net_signals)["DOP"]["iTOW"].push(proto->dop(i).itow());
+    (*net_signals)["DOP"]["gDOP"].push(proto->dop(i).gdop());
+    (*net_signals)["DOP"]["pDOP"].push(proto->dop(i).pdop());
+    (*net_signals)["DOP"]["tDOP"].push(proto->dop(i).tdop());
+    (*net_signals)["DOP"]["vDOP"].push(proto->dop(i).vdop());
+    (*net_signals)["DOP"]["hDOP"].push(proto->dop(i).hdop());
+    (*net_signals)["DOP"]["nDOP"].push(proto->dop(i).ndop());
+    (*net_signals)["DOP"]["eDOP"].push(proto->dop(i).edop());
+  }
+  for (int i = 0; i < proto->pvt_size(); i++) {
+#ifdef CANLIB_TIMESTAMP
+    static uint64_t last_timestamp = 0;
+    if (proto->pvt(i)._inner_timestamp() - last_timestamp < resample_us)
+      continue;
+    else
+      last_timestamp = proto->pvt(i)._inner_timestamp();
+#endif // CANLIB_TIMESTAMP
+    (*net_signals)["PVT"]["_timestamp"].push(proto->pvt(i)._inner_timestamp());
+    (*net_signals)["PVT"]["iTOW"].push(proto->pvt(i).itow());
+    (*net_signals)["PVT"]["year"].push(proto->pvt(i).year());
+    (*net_signals)["PVT"]["month"].push(proto->pvt(i).month());
+    (*net_signals)["PVT"]["day"].push(proto->pvt(i).day());
+    (*net_signals)["PVT"]["hour"].push(proto->pvt(i).hour());
+    (*net_signals)["PVT"]["min"].push(proto->pvt(i).min());
+    (*net_signals)["PVT"]["sec"].push(proto->pvt(i).sec());
+    (*net_signals)["PVT"]["valid"].push(proto->pvt(i).valid());
+    (*net_signals)["PVT"]["tAcc"].push(proto->pvt(i).tacc());
+    (*net_signals)["PVT"]["nano"].push(proto->pvt(i).nano());
+    (*net_signals)["PVT"]["fixType"].push(proto->pvt(i).fixtype());
+    (*net_signals)["PVT"]["flags"].push(proto->pvt(i).flags());
+    (*net_signals)["PVT"]["flags2"].push(proto->pvt(i).flags2());
+    (*net_signals)["PVT"]["numSV"].push(proto->pvt(i).numsv());
+    (*net_signals)["PVT"]["lon"].push(proto->pvt(i).lon());
+    (*net_signals)["PVT"]["lat"].push(proto->pvt(i).lat());
+    (*net_signals)["PVT"]["height"].push(proto->pvt(i).height());
+    (*net_signals)["PVT"]["hMSL"].push(proto->pvt(i).hmsl());
+    (*net_signals)["PVT"]["hAcc"].push(proto->pvt(i).hacc());
+    (*net_signals)["PVT"]["vAcc"].push(proto->pvt(i).vacc());
+    (*net_signals)["PVT"]["velN"].push(proto->pvt(i).veln());
+    (*net_signals)["PVT"]["velE"].push(proto->pvt(i).vele());
+    (*net_signals)["PVT"]["velD"].push(proto->pvt(i).veld());
+    (*net_signals)["PVT"]["gSpeed"].push(proto->pvt(i).gspeed());
+    (*net_signals)["PVT"]["headMot"].push(proto->pvt(i).headmot());
+    (*net_signals)["PVT"]["sAcc"].push(proto->pvt(i).sacc());
+    (*net_signals)["PVT"]["headAcc"].push(proto->pvt(i).headacc());
+    (*net_signals)["PVT"]["pDOP"].push(proto->pvt(i).pdop());
+    (*net_signals)["PVT"]["headVeh"].push(proto->pvt(i).headveh());
+    (*net_signals)["PVT"]["magDec"].push(proto->pvt(i).magdec());
+    (*net_signals)["PVT"]["magAcc"].push(proto->pvt(i).magacc());
+  }
+  for (int i = 0; i < proto->hpposecef_size(); i++) {
+#ifdef CANLIB_TIMESTAMP
+    static uint64_t last_timestamp = 0;
+    if (proto->hpposecef(i)._inner_timestamp() - last_timestamp < resample_us)
+      continue;
+    else
+      last_timestamp = proto->hpposecef(i)._inner_timestamp();
+#endif // CANLIB_TIMESTAMP
+    (*net_signals)["HPPOSECEF"]["_timestamp"].push(
+        proto->hpposecef(i)._inner_timestamp());
+    (*net_signals)["HPPOSECEF"]["version"].push(proto->hpposecef(i).version());
+    (*net_signals)["HPPOSECEF"]["iTOW"].push(proto->hpposecef(i).itow());
+    (*net_signals)["HPPOSECEF"]["ecefX"].push(proto->hpposecef(i).ecefx());
+    (*net_signals)["HPPOSECEF"]["ecefY"].push(proto->hpposecef(i).ecefy());
+    (*net_signals)["HPPOSECEF"]["ecefZ"].push(proto->hpposecef(i).ecefz());
+    (*net_signals)["HPPOSECEF"]["ecefXHp"].push(proto->hpposecef(i).ecefxhp());
+    (*net_signals)["HPPOSECEF"]["ecefYHp"].push(proto->hpposecef(i).ecefyhp());
+    (*net_signals)["HPPOSECEF"]["ecefZHp"].push(proto->hpposecef(i).ecefzhp());
+    (*net_signals)["HPPOSECEF"]["pAcc"].push(proto->hpposecef(i).pacc());
+  }
+  for (int i = 0; i < proto->hpposllh_size(); i++) {
+#ifdef CANLIB_TIMESTAMP
+    static uint64_t last_timestamp = 0;
+    if (proto->hpposllh(i)._inner_timestamp() - last_timestamp < resample_us)
+      continue;
+    else
+      last_timestamp = proto->hpposllh(i)._inner_timestamp();
+#endif // CANLIB_TIMESTAMP
+    (*net_signals)["HPPOSLLH"]["_timestamp"].push(
+        proto->hpposllh(i)._inner_timestamp());
+    (*net_signals)["HPPOSLLH"]["version"].push(proto->hpposllh(i).version());
+    (*net_signals)["HPPOSLLH"]["iTOW"].push(proto->hpposllh(i).itow());
+    (*net_signals)["HPPOSLLH"]["lon"].push(proto->hpposllh(i).lon());
+    (*net_signals)["HPPOSLLH"]["lat"].push(proto->hpposllh(i).lat());
+    (*net_signals)["HPPOSLLH"]["height"].push(proto->hpposllh(i).height());
+    (*net_signals)["HPPOSLLH"]["hMSL"].push(proto->hpposllh(i).hmsl());
+    (*net_signals)["HPPOSLLH"]["lonHp"].push(proto->hpposllh(i).lonhp());
+    (*net_signals)["HPPOSLLH"]["latHp"].push(proto->hpposllh(i).lathp());
+    (*net_signals)["HPPOSLLH"]["heightHp"].push(proto->hpposllh(i).heighthp());
+    (*net_signals)["HPPOSLLH"]["hMSLHp"].push(proto->hpposllh(i).hmslhp());
+    (*net_signals)["HPPOSLLH"]["hAcc"].push(proto->hpposllh(i).hacc());
+    (*net_signals)["HPPOSLLH"]["vAcc"].push(proto->hpposllh(i).vacc());
+  }
 }
-
 
 void gps_serialize_gga(gps::GGA* proto, gps_nmea_gga_t* data){
     proto->set__inner_timestamp(data->_timestamp);

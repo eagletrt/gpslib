@@ -7,6 +7,8 @@ extern "C" {
     #include "gps.h"
 }
 
+#include "common_types.h"
+
 #ifndef CANLIB_CIRCULAR_BUFFER_SIZE
 #define CANLIB_CIRCULAR_BUFFER_SIZE 2000
 #endif//CANLIB_CIRCULAR_BUFFER_SIZE
@@ -29,7 +31,9 @@ typedef struct gps_proto_pack{
 
 void gps_mapping_adaptor_construct(gps_proto_pack& pack, mapping_adaptor& mapping_map);
 void gps_proto_serialize_from_match(gps_protocol_and_message& match, gps::GpsPack* proto, gps_parsed_data_t* data, uint64_t &timestamp, uint64_t downsample_rate);
-void gps_proto_deserialize(gps::GpsPack* proto, gps_proto_pack* pack, uint64_t resample_us);
+void gps_proto_deserialize(gps::GpsPack *proto, network_enums *net_enums,
+                           network_signals *net_signals,
+                           network_strings *net_strings, uint64_t resample_us);
 
 void gps_serialize_gga(gps::GGA* proto, gps_nmea_gga_t* data);
 void gps_serialize_vtg(gps::VTG* proto, gps_nmea_vtg_t* data);
