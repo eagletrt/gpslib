@@ -11,33 +11,36 @@
 #define CLK_A 0x00
 #define CLK_B 0x0A
 
-uint64_t gps_get_timestamp(gps_serial_port* port) {
+int gps_get_timestamp(gps_serial_port* port, uint64_t* timestamp) {
 
     if (port == NULL)
-        return 0;
+        return -1;
 
     char str[20];
     char c = '\0';
     int idx = 0;
-    int in_timestamp = 0;
-    int timestamp = 0;
 
     while (c != '(')
-        read(port->fd, &c, 1);
+        if(read(port->fd, &c, 1) <= 0)
+            return -1;
 
-    read(port->fd, &c, 1);
+    if(read(port->fd, &c, 1) <= 0)
+        return -1;
 
     while (c != ')' && idx < 16) {
         str[idx++] = c;
-        read(port->fd, &c, 1);
+        if(read(port->fd, &c, 1) <= 0)
+            return -1;
     }
 
     if (idx != 16)
-        return 0;
+        return -1;
 
     str[idx] = '\0';
 
-    return (uint64_t)strtol(str, NULL, 10);
+    *timestamp = strtol(str, NULL, 10);
+
+    return 0;
 }
 
 int gps_interface_open_file(gps_serial_port* new_serial_port, const char* filename) {
@@ -134,7 +137,9 @@ gps_protocol_type gps_interface_get_line(gps_serial_port* port, char start_seque
     gps_protocol_type type = GPS_PROTOCOL_TYPE_SIZE;
 
     if(port->type == LOG_FILE){
-        uint64_t current = gps_get_timestamp(port);
+        uint64_t current;
+        if(gps_get_timestamp(port, &current) != 0)
+            return GPS_PROTOCOL_TYPE_SIZE;
         if(current > port->last_timestamp)
             usleep(current - port->last_timestamp);
         if (current != 0)
