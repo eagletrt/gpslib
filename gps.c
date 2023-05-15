@@ -499,7 +499,7 @@ void gps_ubx_value_to_file_hpposllh(FILE *out, gps_ubx_hpposllh_t *data) {
 
 gps_parse_result_t gps_parse_buffer(gps_parsed_data_t *data,
                                     gps_protocol_and_message *match,
-                                    const char *buffer, uint64_t timestamp) {
+                                    char *buffer, uint64_t timestamp) {
   char *buffer_copy = buffer;
   if (match->protocol == GPS_PROTOCOL_TYPE_NMEA) {
     switch (match->message) {
