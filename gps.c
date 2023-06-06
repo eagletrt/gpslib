@@ -84,7 +84,7 @@ double gps_deg_min_to_deg(double value) {
   return deg + (value - deg * 100.0) / 60.0;
 }
 
-gps_parse_result_t gps_parse_nmea_gga(gps_nmea_gga_t *data, char *buffer) {
+gps_parse_result_t gps_parse_nmea_gga(gps_nmea_gga_t *data, const char *buffer) {
   char *ch;
   int index = -1;
   ch = strpbrk(buffer, ",");
@@ -136,7 +136,7 @@ gps_parse_result_t gps_parse_nmea_gga(gps_nmea_gga_t *data, char *buffer) {
   return GPS_PARSE_RESULT_OK;
 }
 
-gps_parse_result_t gps_parse_nmea_gsa(gps_nmea_gsa_t *data, char *buffer) {
+gps_parse_result_t gps_parse_nmea_gsa(gps_nmea_gsa_t *data, const char *buffer) {
   char *ch;
   int index = -1;
   ch = strpbrk(buffer, ",");
@@ -165,7 +165,7 @@ gps_parse_result_t gps_parse_nmea_gsa(gps_nmea_gsa_t *data, char *buffer) {
   return GPS_PARSE_RESULT_OK;
 }
 
-gps_parse_result_t gps_parse_nmea_vtg(gps_nmea_vtg_t *data, char *buffer) {
+gps_parse_result_t gps_parse_nmea_vtg(gps_nmea_vtg_t *data, const char *buffer) {
   char *ch;
   int index = -1;
   ch = strpbrk(buffer, ",");
@@ -499,21 +499,20 @@ void gps_ubx_value_to_file_hpposllh(FILE *out, gps_ubx_hpposllh_t *data) {
 
 gps_parse_result_t gps_parse_buffer(gps_parsed_data_t *data,
                                     gps_protocol_and_message *match,
-                                    char *buffer, uint64_t timestamp) {
-  char *buffer_copy = buffer;
+                                    const char *buffer, uint64_t timestamp) {
   if (match->protocol == GPS_PROTOCOL_TYPE_NMEA) {
     switch (match->message) {
     case GPS_NMEA_TYPE_GGA:
       data->gga._timestamp = timestamp;
-      gps_parse_nmea_gga(&data->gga, buffer_copy);
+      gps_parse_nmea_gga(&data->gga, buffer);
       break;
     case GPS_NMEA_TYPE_GSA:
       data->gsa._timestamp = timestamp;
-      gps_parse_nmea_gsa(&data->gsa, buffer_copy);
+      gps_parse_nmea_gsa(&data->gsa, buffer);
       break;
     case GPS_NMEA_TYPE_VTG:
       data->vtg._timestamp = timestamp;
-      gps_parse_nmea_vtg(&data->vtg, buffer_copy);
+      gps_parse_nmea_vtg(&data->vtg, buffer);
       break;
     default:
       return GPS_PARSE_RESULT_NO_MATCH;
@@ -525,19 +524,19 @@ gps_parse_result_t gps_parse_buffer(gps_parsed_data_t *data,
     switch (match->message) {
     case GPS_UBX_TYPE_NAV_DOP:
       data->dop._timestamp = timestamp;
-      gps_parse_ubx_dop(&data->dop, buffer_copy);
+      gps_parse_ubx_dop(&data->dop, (uint8_t *)buffer);
       break;
     case GPS_UBX_TYPE_NAV_PVT:
       data->pvt._timestamp = timestamp;
-      gps_parse_ubx_pvt(&data->pvt, buffer_copy);
+      gps_parse_ubx_pvt(&data->pvt, (uint8_t *)buffer);
       break;
     case GPS_UBX_TYPE_NAV_HPPOSECEF:
       data->hpposecef._timestamp = timestamp;
-      gps_parse_ubx_hpposecef(&data->hpposecef, buffer_copy);
+      gps_parse_ubx_hpposecef(&data->hpposecef, (uint8_t *)buffer);
       break;
     case GPS_UBX_TYPE_NAV_HPPOSLLH:
       data->hpposllh._timestamp = timestamp;
-      gps_parse_ubx_hpposllh(&data->hpposllh, buffer_copy);
+      gps_parse_ubx_hpposllh(&data->hpposllh, (uint8_t *)buffer);
       break;
     default:
       return GPS_PARSE_RESULT_NO_MATCH;
@@ -556,6 +555,8 @@ void gps_get_message_name(gps_protocol_and_message *match, char *buff) {
     break;
   case GPS_PROTOCOL_TYPE_UBX:
     strcpy(buff, gps_ubx_message_type_string[match->message]);
+    break;
+  default:
     break;
   }
 }
@@ -614,6 +615,8 @@ void gps_to_file(gps_files_t *files, gps_parsed_data_t *data,
     case GPS_NMEA_TYPE_GSA:
       gps_nmea_value_to_file_gsa(files->nmea[GPS_NMEA_TYPE_GSA], &data->gsa);
       break;
+    default:
+      break;
     }
     break;
   case GPS_PROTOCOL_TYPE_UBX:
@@ -632,8 +635,12 @@ void gps_to_file(gps_files_t *files, gps_parsed_data_t *data,
       gps_ubx_value_to_file_hpposllh(files->ubx[GPS_UBX_TYPE_NAV_HPPOSLLH],
                                      &data->hpposllh);
       break;
+      default:
+      break;
     }
     break;
+    default:
+      break;
   }
 }
 

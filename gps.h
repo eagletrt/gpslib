@@ -208,7 +208,7 @@ int gps_match_message(gps_protocol_and_message *match, const char *buffer,
                       gps_protocol_type protocol);
 gps_parse_result_t gps_parse_buffer(gps_parsed_data_t *data,
                                     gps_protocol_and_message *match,
-                                    char *buffer, uint64_t timestamp);
+                                    const char *buffer, uint64_t timestamp);
 
 typedef struct gps_files_t {
   FILE *nmea[GPS_NMEA_TYPE_SIZE];
