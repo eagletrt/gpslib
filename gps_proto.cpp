@@ -83,7 +83,11 @@ void gps_proto_deserialize(gps::GpsPack *proto, network_enums *net_enums,
     (*net_signals)["GGA"]["horizontal_diluition_precision"].push(
         proto->gga(i).horizontal_diluition_precision());
     (*net_enums)["GGA"]["fix_state"].push(proto->gga(i).fix());
-    (*net_strings)["GGA"]["fix_state"].push(FIX_STATE[proto->gga(i).fix()]);
+    if(proto->gga(i).fix() >= 0 && proto->gga(i).fix() < FIX_STATE_LEN) {
+        (*net_strings)["GGA"]["fix_state"].push(FIX_STATE[proto->gga(i).fix()]);
+    }else {
+        (*net_strings)["GGA"]["fix_state"].push("Unknown fix state");
+    }
     (*net_signals)["GGA"]["altitude"].push(proto->gga(i).altitude());
     (*net_signals)["GGA"]["age_of_correction"].push(
         proto->gga(i).age_of_correction());

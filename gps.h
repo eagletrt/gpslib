@@ -193,14 +193,16 @@ static const char *gps_parse_result_string[GPS_PARSE_RESULT_SIZE] = {
     "FIELD_ERROR",
     "CHECKSUM"};
 
-static const char *FIX_STATE[6] = {"FIX NOT AVAILABLE OR INVALID",
+#define FIX_STATE_LEN 6
+static const char *FIX_STATE[FIX_STATE_LEN] = {"FIX NOT AVAILABLE OR INVALID",
                                    "Standard GPS (2D/3D)",
                                    "DIFFERENTIAL GPS",
                                    "RTK Fixed",
                                    "RTK Float",
                                    "DEAD RECKONING MODE FIX VALID"};
 
-static const char *FIX_MODE[3] = {"FIX NOT AVAILABLE", "2D", "3D"};
+#define FIX_MODE_LEN 3
+static const char *FIX_MODE[FIX_MODE_LEN] = {"FIX NOT AVAILABLE", "2D", "3D"};
 
 // given buffer and protocol, match the type of message
 // 0 if ok, -1 if error
