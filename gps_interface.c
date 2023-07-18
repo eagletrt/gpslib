@@ -128,7 +128,7 @@ void gps_interface_close(gps_serial_port* serial_port){
     serial_port->open = 0;
 }
 
-gps_protocol_type gps_interface_get_line(gps_serial_port* port, char start_sequence[GPS_MAX_START_SEQUENCE_SIZE], int* start_sequence_size, char line[GPS_MAX_LINE_SIZE], int* line_size){
+gps_protocol_type gps_interface_get_line(gps_serial_port* port, char start_sequence[GPS_MAX_START_SEQUENCE_SIZE], int* start_sequence_size, char line[GPS_MAX_LINE_SIZE], int* line_size, bool sleep){
     uint8_t c;
     int size = -1;
     *line_size = size;
@@ -140,7 +140,7 @@ gps_protocol_type gps_interface_get_line(gps_serial_port* port, char start_seque
         uint64_t current;
         if(gps_get_timestamp(port, &current) != 0)
             return GPS_PROTOCOL_TYPE_SIZE;
-        if(current > port->last_timestamp)
+        if(sleep && current > port->last_timestamp)
             usleep(current - port->last_timestamp);
         if (current != 0)
             port->last_timestamp = current;
