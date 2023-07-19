@@ -4,7 +4,7 @@
 #include <stdio.h>
 
 #define GPS_MAX_LINE_SIZE 300
-#define GPS_MAX_START_SEQUENCE_SIZE 3
+#define GPS_MAX_START_SEQUENCE_SIZE 3 + 1
 
 typedef enum gps_protocol_type {
   GPS_PROTOCOL_TYPE_NMEA,

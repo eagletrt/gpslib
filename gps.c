@@ -70,12 +70,12 @@ int gps_match_message(gps_protocol_and_message *match, const char *buffer,
       }
     }
   } else {
-    match->protocol = GPS_PROTOCOL_TYPE_SIZE;
+    protocol = GPS_PROTOCOL_TYPE_SIZE;
   }
+  match->protocol = protocol;
   if (match->message == -1)
     return -1;
 
-  match->protocol = protocol;
   return 0;
 }
 

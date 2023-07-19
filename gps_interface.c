@@ -135,6 +135,8 @@ gps_protocol_type gps_interface_get_line(gps_serial_port* port, char start_seque
     int previous_clk_a = 0; // flag for <CR> termination byte (NMEA protocol)
     int ubx_message_size = 0;
     gps_protocol_type type = GPS_PROTOCOL_TYPE_SIZE;
+    memset(start_sequence, 0, GPS_MAX_START_SEQUENCE_SIZE);
+    memset(line, 0, GPS_MAX_LINE_SIZE);
 
     if(port->type == LOG_FILE){
         uint64_t current;
@@ -164,6 +166,7 @@ gps_protocol_type gps_interface_get_line(gps_serial_port* port, char start_seque
                         size = 0;
                         start_sequence[0] = 0xb5;
                         start_sequence[1] = 0x62;
+                        start_sequence[2] = 0x00;
                         *start_sequence_size = 2;
                     }
                 break;
@@ -182,6 +185,7 @@ gps_protocol_type gps_interface_get_line(gps_serial_port* port, char start_seque
                         if(read(port->fd, &c, 1) <= 0)
                             return GPS_PROTOCOL_TYPE_SIZE;
                         start_sequence[2] = c;
+                        start_sequence[3] = 0x00;
                         *start_sequence_size = 3;
                         ubx_message_size = 0;
                     }
@@ -193,10 +197,11 @@ gps_protocol_type gps_interface_get_line(gps_serial_port* port, char start_seque
         }
 
         if(type == GPS_PROTOCOL_TYPE_NMEA){
-            if(c == CLK_A){  // CLK_A termination byte
+            if(c == '\n') {
+                break;
+            } else if(c == CLK_A){  // CLK_A termination byte
                 previous_clk_a = 1;
-            }
-            else if(c == CLK_B && previous_clk_a == 1){ // CLK_B termination byte
+            } else if(c == CLK_B && previous_clk_a == 1){ // CLK_B termination byte
                 size -= 2;    // because line is not updated with CLK_A and CLK_B
                 break;
             } else {
