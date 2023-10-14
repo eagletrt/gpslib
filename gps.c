@@ -13,7 +13,7 @@ const char *gps_nmea_message_type_string(gps_nmea_message_type type) {
   }
 }
 
-static const char *gps_ubx_message_type_string(gps_ubx_message_type type) {
+const char *gps_ubx_message_type_string(gps_ubx_message_type type) {
   switch (type) {
     case GPS_UBX_TYPE_NAV_DOP: return "NAV_DOP"; break;
     case GPS_UBX_TYPE_NAV_PVT: return "NAV_PVT"; break;
@@ -23,7 +23,7 @@ static const char *gps_ubx_message_type_string(gps_ubx_message_type type) {
   }
 }
 
-static const char *gps_parse_result_string(gps_parse_result_t result) {
+const char *gps_parse_result_string(gps_parse_result_t result) {
   switch (result) {
     case GPS_PARSE_RESULT_OK: return "OK"; break;
     case GPS_PARSE_RESULT_NO_MATCH: return "NO_MATCH"; break;
@@ -36,7 +36,7 @@ static const char *gps_parse_result_string(gps_parse_result_t result) {
   }
 }
 
-static const char *gps_fix_state_string(uint8_t fix_state) {
+const char *gps_fix_state_string(uint8_t fix_state) {
   switch (fix_state) {
     case 0: return "FIX NOT AVAILABLE OR INVALID"; break;
     case 1: return "Standard GPS (2D/3D)"; break;
@@ -47,7 +47,7 @@ static const char *gps_fix_state_string(uint8_t fix_state) {
     default: return "unknown FIX STATE"; break;
   }
 }
-static const char *gps_fix_mode_string(uint8_t fix_mode) {
+const char *gps_fix_mode_string(uint8_t fix_mode) {
   switch (fix_mode) {
     case 0: return "FIX NOT AVAILABLE"; break;
     case 1: return "2D"; break;
@@ -130,8 +130,8 @@ int gps_match_message(gps_protocol_and_message *match, const char *buffer,
   return 0;
 }
 
-inline double gps_deg_min_to_deg(double value) {
-  int deg = floor(value / 100);
+static inline double gps_deg_min_to_deg(double value) {
+  int deg = floor(value / 100.0);
   return deg + (value - deg * 100.0) / 60.0;
 }
 

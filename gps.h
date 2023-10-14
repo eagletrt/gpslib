@@ -24,7 +24,7 @@ typedef enum gps_nmea_message_type {
   GPS_NMEA_TYPE_SIZE,
 } gps_nmea_message_type;
 
-static const char *gps_nmea_message_type_string(gps_nmea_message_type type);
+const char *gps_nmea_message_type_string(gps_nmea_message_type type);
 
 typedef enum gps_ubx_message_type {
   GPS_UBX_TYPE_NAV_DOP,
@@ -42,7 +42,7 @@ static const uint8_t gps_ubx_matches[GPS_UBX_TYPE_SIZE] = {
     0x14  // HPPOSLLH
 };
 
-static const char *gps_ubx_message_type_string(gps_ubx_message_type type);
+const char *gps_ubx_message_type_string(gps_ubx_message_type type);
 
 typedef struct gps_protocol_and_message {
   gps_protocol_type protocol;
@@ -187,10 +187,9 @@ typedef enum gps_parse_result_t {
   GPS_PARSE_RESULT_SIZE
 } gps_parse_result_t;
 
-static const char *gps_parse_result_string(gps_parse_result_t result);
-
-static const char *gps_fix_state_string(uint8_t fix_state);
-static const char *gps_fix_mode_string(uint8_t fix_mode);
+const char *gps_parse_result_string(gps_parse_result_t result);
+const char *gps_fix_state_string(uint8_t fix_state);
+const char *gps_fix_mode_string(uint8_t fix_mode);
 
 // given buffer and protocol, match the type of message
 // 0 if ok, -1 if error
