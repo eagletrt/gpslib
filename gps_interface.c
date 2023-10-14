@@ -156,30 +156,30 @@ gps_protocol_type gps_interface_get_line(gps_serial_port* port, char start_seque
         if(size == -1){
             switch(c){
                 // first sync byte for ubx message
-                case 0xb5:
+                case GPS_UBX_SYNC_FIRST_BYTE:
                     // read second syncronization byte
                     if(read(port->fd, &c, 1) <= 0)
                         return GPS_PROTOCOL_TYPE_SIZE;
                     // second sync byte for ubx message
-                    if(c == 0x62){
+                    if(c == GPS_UBX_SYNC_SECOND_BYTE){
                         type = GPS_PROTOCOL_TYPE_UBX;
                         size = 0;
-                        start_sequence[0] = 0xb5;
-                        start_sequence[1] = 0x62;
+                        start_sequence[0] = GPS_UBX_SYNC_FIRST_BYTE;
+                        start_sequence[1] = GPS_UBX_SYNC_SECOND_BYTE;
                         start_sequence[2] = 0x00;
                         *start_sequence_size = 2;
                     }
                 break;
                 // first sync byte for nmea message
-                case 0x24:
+                case GPS_NMEA_SYNC_FIRST_BYTE:
                     // read second syncronization byte
                     if(read(port->fd, &c, 1) <= 0)
                         return GPS_PROTOCOL_TYPE_SIZE;
                     // match second syncronyzation byte
-                    if(c == 0x47 /*G*/ || c == 0x50 /*P*/){
+                    if(c == GPS_NMEA_SYNC_SECOND_BYTE1 /*G*/ || c == GPS_NMEA_SYNC_SECOND_BYTE2 /*P*/){
                         type = GPS_PROTOCOL_TYPE_NMEA;
                         size = 0;
-                        start_sequence[0] = 0x24;
+                        start_sequence[0] = GPS_NMEA_SYNC_FIRST_BYTE;
                         start_sequence[1] = c;
                         // extra start sequence byte
                         if(read(port->fd, &c, 1) <= 0)

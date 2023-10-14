@@ -5,6 +5,11 @@
 
 #define GPS_MAX_LINE_SIZE 300
 #define GPS_MAX_START_SEQUENCE_SIZE 3 + 1
+#define GPS_UBX_SYNC_FIRST_BYTE (0xb5)
+#define GPS_UBX_SYNC_SECOND_BYTE (0x62)
+#define GPS_NMEA_SYNC_FIRST_BYTE (0x24)
+#define GPS_NMEA_SYNC_SECOND_BYTE1 (0x47)
+#define GPS_NMEA_SYNC_SECOND_BYTE2 (0x50)
 
 typedef enum gps_protocol_type {
   GPS_PROTOCOL_TYPE_NMEA,
@@ -19,8 +24,7 @@ typedef enum gps_nmea_message_type {
   GPS_NMEA_TYPE_SIZE,
 } gps_nmea_message_type;
 
-static const char *gps_nmea_message_type_string[GPS_NMEA_TYPE_SIZE] = {
-    "GGA", "VTG", "GSA"};
+static const char *gps_nmea_message_type_string(gps_nmea_message_type type);
 
 typedef enum gps_ubx_message_type {
   GPS_UBX_TYPE_NAV_DOP,
@@ -38,8 +42,7 @@ static const uint8_t gps_ubx_matches[GPS_UBX_TYPE_SIZE] = {
     0x14  // HPPOSLLH
 };
 
-static const char *gps_ubx_message_type_string[GPS_UBX_TYPE_SIZE] = {
-    "NAV_DOP", "NAV_PVT", "NAV_HPPOSECEF", "NAV_HPPOSLLH"};
+static const char *gps_ubx_message_type_string(gps_ubx_message_type type);
 
 typedef struct gps_protocol_and_message {
   gps_protocol_type protocol;
@@ -184,25 +187,10 @@ typedef enum gps_parse_result_t {
   GPS_PARSE_RESULT_SIZE
 } gps_parse_result_t;
 
-static const char *gps_parse_result_string[GPS_PARSE_RESULT_SIZE] = {
-    "OK",
-    "NO_MATCH",
-    "MESSAGE_EMPTY",
-    "MESAGE_LENGTH",
-    "MESSAGE_UNDEFINED",
-    "FIELD_ERROR",
-    "CHECKSUM"};
+static const char *gps_parse_result_string(gps_parse_result_t result);
 
-#define FIX_STATE_LEN 6
-static const char *FIX_STATE[FIX_STATE_LEN] = {"FIX NOT AVAILABLE OR INVALID",
-                                   "Standard GPS (2D/3D)",
-                                   "DIFFERENTIAL GPS",
-                                   "RTK Fixed",
-                                   "RTK Float",
-                                   "DEAD RECKONING MODE FIX VALID"};
-
-#define FIX_MODE_LEN 3
-static const char *FIX_MODE[FIX_MODE_LEN] = {"FIX NOT AVAILABLE", "2D", "3D"};
+static const char *gps_fix_state_string(uint8_t fix_state);
+static const char *gps_fix_mode_string(uint8_t fix_mode);
 
 // given buffer and protocol, match the type of message
 // 0 if ok, -1 if error

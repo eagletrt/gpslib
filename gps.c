@@ -4,6 +4,58 @@
 #include <stdlib.h>
 #include <string.h>
 
+const char *gps_nmea_message_type_string(gps_nmea_message_type type) {
+  switch (type) {
+    case GPS_NMEA_TYPE_GGA: return "GGA"; break;
+    case GPS_NMEA_TYPE_VTG: return "VTG"; break;
+    case GPS_NMEA_TYPE_GSA: return "GSA"; break;
+    default: return "unkown NMEA message"; break;
+  }
+}
+
+static const char *gps_ubx_message_type_string(gps_ubx_message_type type) {
+  switch (type) {
+    case GPS_UBX_TYPE_NAV_DOP: return "NAV_DOP"; break;
+    case GPS_UBX_TYPE_NAV_PVT: return "NAV_PVT"; break;
+    case GPS_UBX_TYPE_NAV_HPPOSECEF: return "NAV_HPPOSECEF"; break;
+    case GPS_UBX_TYPE_NAV_HPPOSLLH: return "NAV_HPPOSLLH"; break;
+    default: return "unknown UBX message"; break;
+  }
+}
+
+static const char *gps_parse_result_string(gps_parse_result_t result) {
+  switch (result) {
+    case GPS_PARSE_RESULT_OK: return "OK"; break;
+    case GPS_PARSE_RESULT_NO_MATCH: return "NO_MATCH"; break;
+    case GPS_PARSE_RESULT_MESSAGE_EMPTY: return "MESSAGE_EMPTY"; break;
+    case GPS_PARSE_RESULT_MESAGE_LENGTH: return "MESAGE_LENGTH"; break;
+    case GPS_PARSE_RESULT_MESSAGE_UNDEFINED: return "MESSAGE_UNDEFINED"; break;
+    case GPS_PARSE_RESULT_FIELD_ERROR: return "FIELD_ERROR"; break;
+    case GPS_PARSE_RESULT_CHECKSUM: return "CHECKSUM"; break;
+    default: return "unknown PARSE RESULT"; break;
+  }
+}
+
+static const char *gps_fix_state_string(uint8_t fix_state) {
+  switch (fix_state) {
+    case 0: return "FIX NOT AVAILABLE OR INVALID"; break;
+    case 1: return "Standard GPS (2D/3D)"; break;
+    case 2: return "DIFFERENTIAL GPS"; break;
+    case 3: return "RTK Fixed"; break;
+    case 4: return "RTK Float"; break;
+    case 5: return "DEAD RECKONING MODE FIX VALID"; break;
+    default: return "unknown FIX STATE"; break;
+  }
+}
+static const char *gps_fix_mode_string(uint8_t fix_mode) {
+  switch (fix_mode) {
+    case 0: return "FIX NOT AVAILABLE"; break;
+    case 1: return "2D"; break;
+    case 2: return "3D"; break;
+    default: return "unknown FIX MODE"; break;
+  }
+}
+
 void rfc1145_checksum(int8_t *ch_a, int8_t *ch_b, const char *buffer,
                       size_t size) {
   *ch_a = 0;
@@ -52,12 +104,11 @@ int gps_match_message(gps_protocol_and_message *match, const char *buffer,
                       gps_protocol_type protocol) {
   match->message = -1;
   if (protocol == GPS_PROTOCOL_TYPE_NMEA) {
-    if (strncmp(buffer, "GGA", 3) == 0)
-      match->message = GPS_NMEA_TYPE_GGA;
-    else if (strncmp(buffer, "GSA", 3) == 0)
-      match->message = GPS_NMEA_TYPE_GSA;
-    else if (strncmp(buffer, "VTG", 3) == 0)
-      match->message = GPS_NMEA_TYPE_VTG;
+
+    if (strncmp(buffer, "GGA", 3) == 0) match->message = GPS_NMEA_TYPE_GGA;
+    else if (strncmp(buffer, "GSA", 3) == 0) match->message = GPS_NMEA_TYPE_GSA;
+    else if (strncmp(buffer, "VTG", 3) == 0) match->message = GPS_NMEA_TYPE_VTG;
+
   } else if (protocol == GPS_PROTOCOL_TYPE_UBX) {
     if (buffer[0] != 1) { // match NAV message type
       match->message = GPS_UBX_TYPE_SIZE;
@@ -79,7 +130,7 @@ int gps_match_message(gps_protocol_and_message *match, const char *buffer,
   return 0;
 }
 
-double gps_deg_min_to_deg(double value) {
+inline double gps_deg_min_to_deg(double value) {
   int deg = floor(value / 100);
   return deg + (value - deg * 100.0) / 60.0;
 }
@@ -132,7 +183,7 @@ gps_parse_result_t gps_parse_nmea_gga(gps_nmea_gga_t *data, const char *buffer) 
     if (ch != NULL)
       ch += 1;
   }
-  data->fix_state = FIX_STATE[data->fix];
+  data->fix_state = gps_fix_state_string(data->fix);
   return GPS_PARSE_RESULT_OK;
 }
 
@@ -551,10 +602,10 @@ gps_parse_result_t gps_parse_buffer(gps_parsed_data_t *data,
 void gps_get_message_name(gps_protocol_and_message *match, char *buff) {
   switch (match->protocol) {
   case GPS_PROTOCOL_TYPE_NMEA:
-    strcpy(buff, gps_nmea_message_type_string[match->message]);
+    strcpy(buff, gps_nmea_message_type_string(match->message));
     break;
   case GPS_PROTOCOL_TYPE_UBX:
-    strcpy(buff, gps_ubx_message_type_string[match->message]);
+    strcpy(buff, gps_ubx_message_type_string(match->message));
     break;
   default:
     break;
