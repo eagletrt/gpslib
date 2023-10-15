@@ -61,9 +61,10 @@ int gps_interface_open_file(gps_serial_port *new_serial_port,
   return 0;
 }
 
-int gps_interface_open(gps_serial_port* new_serial_port, const char* port, speed_t speed){
-    if(port == NULL)
-        return -1;
+int gps_interface_open(gps_serial_port *new_serial_port, const char *port,
+                       speed_t speed) {
+  if (port == NULL)
+    return -1;
 
   new_serial_port->open = 0;
   new_serial_port->fd = open(port, O_RDWR);
@@ -142,15 +143,19 @@ void gps_interface_close(gps_serial_port *serial_port) {
   serial_port->open = 0;
 }
 
-gps_protocol_type gps_interface_get_line(gps_serial_port* port, char start_sequence[GPS_MAX_START_SEQUENCE_SIZE], int* start_sequence_size, char line[GPS_MAX_LINE_SIZE], int* line_size, bool sleep){
-    uint8_t c;
-    int size = -1;
-    *line_size = size;
-    int previous_clk_a = 0; // flag for <CR> termination byte (NMEA protocol)
-    int ubx_message_size = 0;
-    gps_protocol_type type = GPS_PROTOCOL_TYPE_SIZE;
-    memset(start_sequence, 0, GPS_MAX_START_SEQUENCE_SIZE);
-    memset(line, 0, GPS_MAX_LINE_SIZE);
+gps_protocol_type
+gps_interface_get_line(gps_serial_port *port,
+                       char start_sequence[GPS_MAX_START_SEQUENCE_SIZE],
+                       int *start_sequence_size, char line[GPS_MAX_LINE_SIZE],
+                       int *line_size, bool sleep) {
+  uint8_t c;
+  int size = -1;
+  *line_size = size;
+  int previous_clk_a = 0; // flag for <CR> termination byte (NMEA protocol)
+  int ubx_message_size = 0;
+  gps_protocol_type type = GPS_PROTOCOL_TYPE_SIZE;
+  memset(start_sequence, 0, GPS_MAX_START_SEQUENCE_SIZE);
+  memset(line, 0, GPS_MAX_LINE_SIZE);
 
   if (port->type == LOG_FILE) {
     uint64_t current;

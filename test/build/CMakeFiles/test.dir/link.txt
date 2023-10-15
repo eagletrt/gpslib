@@ -1,0 +1,1 @@
+/usr/bin/c++ CMakeFiles/test.dir/test.cpp.o CMakeFiles/test.dir/home/filippo/github/gpslib/gps.c.o CMakeFiles/test.dir/home/filippo/github/gpslib/gps_proto.cpp.o CMakeFiles/test.dir/home/filippo/github/gpslib/gps.pb.cc.o -o test  /usr/lib/x86_64-linux-gnu/libprotobuf.so 

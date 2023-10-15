@@ -58,7 +58,7 @@ private:
 
 template <typename T, size_t S, typename IT>
 constexpr canlib_circular_buffer<T, S, IT>::canlib_circular_buffer()
-    : head(buffer), tail(buffer), count(0), _offset(0) {}
+    : head(buffer), tail(buffer), _offset(0), count(0) {}
 
 template <typename T, size_t S, typename IT>
 bool canlib_circular_buffer<T, S, IT>::unshift(T value) {

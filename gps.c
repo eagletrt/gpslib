@@ -462,42 +462,14 @@ void gps_parse_ubx_hpposllh(gps_ubx_hpposllh_t *data, uint8_t *buffer) {
 }
 
 void gps_parse_ubx_relposned(gps_ubx_relposned_t *data, uint8_t *buffer) {
-  data->version = *(uint8_t *)buffer;
-  buffer += sizeof(uint8_t);
-  buffer += sizeof(uint8_t); // reserved
-  data->refStationId = *(uint16_t *)buffer;
-  buffer += sizeof(uint16_t);
-  data->iTOW  = *(uint64_t *)buffer;
-  buffer += sizeof(uint64_t);
-  data->relPosN = (double)(*(int64_t *)buffer) * 0.01;
-  buffer += sizeof(int64_t);
-  data->relPosE = (double)(*(int64_t *)buffer) * 0.01;
-  buffer += sizeof(int64_t);
-  data->relPosD = (double)(*(int64_t *)buffer) * 0.01;
-  buffer += sizeof(int64_t);
-  data->relPosLength = (double)(*(int64_t *)buffer) * 0.01;
-  buffer += sizeof(int64_t);
-  data->relPosHeading = (double)(*(int64_t *)buffer) * 1e-5;
-  buffer += sizeof(int64_t);
-  buffer += sizeof(uint8_t) * 4; // reserved2
-  data->relPosHPN = (double)(*(int8_t *)buffer) * 0.0001;
-  buffer += sizeof(int8_t);
-  data->relPosHPE = (double)(*(int8_t *)buffer) * 0.0001;
-  buffer += sizeof(int8_t);
-  data->relPosHPD = (double)(*(int8_t *)buffer) * 0.0001;
-  buffer += sizeof(int8_t);
-  data->relPosHPLength = (double)(*(int8_t *)buffer) * 0.0001;
-  buffer += sizeof(int8_t);
-  data->accN = (double)(*(uint64_t *)buffer) * 0.0001;
-  buffer += sizeof(uint64_t);
-  data->accE = (double)(*(uint64_t *)buffer) * 0.0001;
-  buffer += sizeof(uint64_t);
-  data->accD = (double)(*(uint64_t *)buffer) * 0.0001;
-  buffer += sizeof(uint64_t);
-  data->accLength = (double)(*(uint64_t *)buffer) * 0.0001;
-  buffer += sizeof(uint64_t);
-  data->accHeading = (double)(*(uint64_t *)buffer) * 1e-5;
-  buffer += sizeof(uint64_t);
+
+#define FIELD(byte_offset, original_type, struct_type, formatter, scale,       \
+              offset, unit, name)                                              \
+  data->name =                                                                 \
+      ((struct_type)(*(original_type *)(buffer + byte_offset))) * scale +      \
+      offset;
+  GPS_UBX_RELPOSNED_FIELDS
+#undef FIELD
 }
 
 void gps_nmea_fields_gga(FILE *out) {
@@ -545,9 +517,15 @@ void gps_ubx_fields_hpposllh(FILE *out) {
 }
 
 void gps_ubx_fields_relposned(FILE *out) {
-  fprintf(out, "_timestamp,version,refStationId,iTOW,relPosN,relPosE,relPosD,relPosLength,"
-               "relPosHeading,relPosHPN,relPosHPE,relPosHPD,relPosHPLength,"
-               "accN,accE,accD,accLength,accHeading\n");
+#define FIELD(byte_offset, original_type, struct_type, formatter, scale,       \
+              offset, unit, name)                                              \
+  "," #name
+  fprintf(out, "_timestamp"
+
+          GPS_UBX_RELPOSNED_FIELDS
+
+               "\n");
+#undef FIELD
   fflush(out);
 }
 
@@ -660,26 +638,25 @@ void gps_ubx_value_to_file_hpposllh(FILE *out, gps_ubx_hpposllh_t *data) {
 }
 
 void gps_ubx_value_to_file_relposned(FILE *out, gps_ubx_relposned_t *data) {
+#define FIELD(byte_offset, original_type, struct_type, formatter, scale,       \
+              offset, unit, name)                                              \
+  "," formatter
+
   fprintf(out,
-          "%" PRIu64 ",%" PRIu8 ",%" PRIu16 ",%" PRIu64 ",%.9f"
-          ",%.9f"
-          ",%.9f"
-          ",%.9f"
-          ",%.9f"
-          ",%.9f"
-          ",%.9f"
-          ",%.9f"
-          ",%.9f"
-          ",%.9f"
-          ",%.9f"
-          ",%.9f"
-          ",%.9f"
+          "%" PRIu64
+              GPS_UBX_RELPOSNED_FIELDS
           "\n",
-          data->_timestamp, data->version, data->refStationId, data->iTOW,
-          data->relPosN, data->relPosE, data->relPosD, data->relPosLength,
-          data->relPosHeading, data->relPosHPN, data->relPosHPE,
-          data->relPosHPD, data->relPosHPLength, data->accN, data->accE,
-          data->accD, data->accLength, data->accHeading);
+          data->_timestamp
+
+#undef FIELD
+#define FIELD(byte_offset, original_type, struct_type, formatter, scale,       \
+              offset, unit, name)                                              \
+  , data->name
+  
+              GPS_UBX_RELPOSNED_FIELDS
+
+#undef FIELD
+  );
   fflush(out);
 }
 

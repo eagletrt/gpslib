@@ -166,29 +166,36 @@ typedef struct gps_ubx_hpposllh_t {
   uint32_t vAcc;   // [mm*0.1]
 } gps_ubx_hpposllh_t;
 
+// FIELD(byte_offset, original_type, struct_type, scale, offset, unit, name)
+#define GPS_UBX_RELPOSNED_FIELDS                                               \
+  FIELD( 0, uint8_t, uint8_t, "%" PRIu8, 1, 0, "", version)                     \
+  FIELD( 2, uint16_t, uint16_t, "%" PRIu16, 1, 0, "", refStationId)             \
+  FIELD( 4, uint64_t, uint64_t, "%" PRIu64, 1, 0, "ms", iTOW)                   \
+  FIELD( 8, int64_t, double, "%f", 0.01, 0, "m", relPosN)                       \
+  FIELD(12, int64_t, double, "%f", 0.01, 0, "m", relPosE)                      \
+  FIELD(16, int64_t, double, "%f", 0.01, 0, "m", relPosD)                      \
+  FIELD(20, int64_t, double, "%f", 0.01, 0, "m", relPosLength)                 \
+  FIELD(24, int64_t, double, "%f", 1e-5, 0, "deg", relPosHeading)              \
+  FIELD(32, int8_t, double, "%f", 0.1, 0, "mm", relPosHPN)                     \
+  FIELD(33, int8_t, double, "%f", 0.1, 0, "mm", relPosHPE)                     \
+  FIELD(34, int8_t, double, "%f", 0.1, 0, "mm", relPosHPD)                     \
+  FIELD(35, int8_t, double, "%f", 0.1, 0, "mm", relPosHPLength)                \
+  FIELD(36, uint64_t, double, "%f", 0.1, 0, "mm", accN)                        \
+  FIELD(40, uint64_t, double, "%f", 0.1, 0, "mm", accE)                        \
+  FIELD(44, uint64_t, double, "%f", 0.1, 0, "mm", accD)                        \
+  FIELD(48, uint64_t, double, "%f", 0.1, 0, "mm", accLength)                   \
+  FIELD(52, uint64_t, double, "%f", 1e-5, 0, "deg", accHeading)                \
+  FIELD(60, uint64_t, uint64_t, "%" PRIu64, 1, 0, "flags", flags)
+
 typedef struct gps_ubx_relposned_t {
   uint64_t _timestamp;
-  uint8_t version;
-  uint8_t reserved1;
-  uint16_t refStationId;
-  uint64_t iTOW;
-  double relPosN;       // [m] 0.01 int64_t
-  double relPosE;       // [m] 0.01 int64_t
-  double relPosD;       // [m] 0.01 int64_t
-  double relPosLength;  // [m] 0.01 int64_t
-  double relPosHeading; // [deg] scale=1e-5 int64_t
-  uint8_t reserved2[4];
-  double relPosHPN;      // [mm] scale=0.1 int8_t
-  double relPosHPE;      // [mm] scale=0.1 int8_t
-  double relPosHPD;      // [mm] scale=0.1 int8_t
-  double relPosHPLength; // [mm] scale=0.1 int8_t
-  double accN;           // [mm] scale=0.1 uint64_t
-  double accE;           // [mm] scale=0.1 uint64_t
-  double accD;           // [mm] scale=0.1 uint64_t
-  double accLength;      // [mm] scale=0.1 uint64_t
-  double accHeading;     // [deg] scale=1e-5 uint64_t
-  uint8_t reserved3[4];
-  uint64_t flags;
+
+#define FIELD(byte_offset, original_type, struct_type, formatter, scale,       \
+              offset, unit, name)                                              \
+  struct_type name;
+  GPS_UBX_RELPOSNED_FIELDS
+#undef FIELD
+
 } gps_ubx_relposned_t;
 
 typedef struct gps_parsed_data_t {

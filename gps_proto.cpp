@@ -81,7 +81,6 @@ void gps_proto_serialize_from_match(gps_protocol_and_message& match, gps::GpsPac
 void gps_proto_deserialize(gps::GpsPack *proto, network_enums *net_enums,
                            network_signals *net_signals,
                            network_strings *net_strings, uint64_t resample_us) {
-  char buffer[1024];
   for (int i = 0; i < proto->gga_size(); i++) {
     static uint64_t last_timestamp = 0;
     if (proto->gga(i)._inner_timestamp() - last_timestamp < resample_us)
