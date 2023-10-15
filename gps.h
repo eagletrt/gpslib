@@ -31,6 +31,7 @@ typedef enum gps_ubx_message_type {
   GPS_UBX_TYPE_NAV_PVT,
   GPS_UBX_TYPE_NAV_HPPOSECEF,
   GPS_UBX_TYPE_NAV_HPPOSLLH,
+  GPS_UBX_TYPE_NAV_RELPOSNED,
   // NAV-VELNED
   GPS_UBX_TYPE_SIZE
 } gps_ubx_message_type;
@@ -39,7 +40,8 @@ static const uint8_t gps_ubx_matches[GPS_UBX_TYPE_SIZE] = {
     0x04, // DOP
     0x07, // PVT
     0x13, // HPPOSECEF
-    0x14  // HPPOSLLH
+    0x14, // HPPOSLLH
+    0x3c  // RELPOSNED
 };
 
 const char *gps_ubx_message_type_string(gps_ubx_message_type type);
@@ -164,6 +166,31 @@ typedef struct gps_ubx_hpposllh_t {
   uint32_t vAcc;   // [mm*0.1]
 } gps_ubx_hpposllh_t;
 
+typedef struct gps_ubx_relposned_t {
+  uint64_t _timestamp;
+  uint8_t version;
+  uint8_t reserved1;
+  uint16_t refStationId;
+  uint64_t iTOW;
+  double relPosN;       // [m] 0.01 int64_t
+  double relPosE;       // [m] 0.01 int64_t
+  double relPosD;       // [m] 0.01 int64_t
+  double relPosLength;  // [m] 0.01 int64_t
+  double relPosHeading; // [deg] scale=1e-5 int64_t
+  uint8_t reserved2[4];
+  double relPosHPN;      // [mm] scale=0.1 int8_t
+  double relPosHPE;      // [mm] scale=0.1 int8_t
+  double relPosHPD;      // [mm] scale=0.1 int8_t
+  double relPosHPLength; // [mm] scale=0.1 int8_t
+  double accN;           // [mm] scale=0.1 uint64_t
+  double accE;           // [mm] scale=0.1 uint64_t
+  double accD;           // [mm] scale=0.1 uint64_t
+  double accLength;      // [mm] scale=0.1 uint64_t
+  double accHeading;     // [deg] scale=1e-5 uint64_t
+  uint8_t reserved3[4];
+  uint64_t flags;
+} gps_ubx_relposned_t;
+
 typedef struct gps_parsed_data_t {
   // NMEA
   gps_nmea_gga_t gga;
@@ -174,6 +201,7 @@ typedef struct gps_parsed_data_t {
   gps_ubx_pvt_t pvt;
   gps_ubx_hpposecef_t hpposecef;
   gps_ubx_hpposllh_t hpposllh;
+  gps_ubx_relposned_t relposned;
 } gps_parsed_data_t;
 
 typedef enum gps_parse_result_t {

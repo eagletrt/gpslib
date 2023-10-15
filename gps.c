@@ -6,53 +6,112 @@
 
 const char *gps_nmea_message_type_string(gps_nmea_message_type type) {
   switch (type) {
-    case GPS_NMEA_TYPE_GGA: return "GGA"; break;
-    case GPS_NMEA_TYPE_VTG: return "VTG"; break;
-    case GPS_NMEA_TYPE_GSA: return "GSA"; break;
-    default: return "unkown NMEA message"; break;
+  case GPS_NMEA_TYPE_GGA:
+    return "GGA";
+    break;
+  case GPS_NMEA_TYPE_VTG:
+    return "VTG";
+    break;
+  case GPS_NMEA_TYPE_GSA:
+    return "GSA";
+    break;
+  default:
+    return "unkown NMEA message";
+    break;
   }
 }
 
 const char *gps_ubx_message_type_string(gps_ubx_message_type type) {
   switch (type) {
-    case GPS_UBX_TYPE_NAV_DOP: return "NAV_DOP"; break;
-    case GPS_UBX_TYPE_NAV_PVT: return "NAV_PVT"; break;
-    case GPS_UBX_TYPE_NAV_HPPOSECEF: return "NAV_HPPOSECEF"; break;
-    case GPS_UBX_TYPE_NAV_HPPOSLLH: return "NAV_HPPOSLLH"; break;
-    default: return "unknown UBX message"; break;
+  case GPS_UBX_TYPE_NAV_DOP:
+    return "NAV_DOP";
+    break;
+  case GPS_UBX_TYPE_NAV_PVT:
+    return "NAV_PVT";
+    break;
+  case GPS_UBX_TYPE_NAV_HPPOSECEF:
+    return "NAV_HPPOSECEF";
+    break;
+  case GPS_UBX_TYPE_NAV_HPPOSLLH:
+    return "NAV_HPPOSLLH";
+    break;
+  case GPS_UBX_TYPE_NAV_RELPOSNED:
+    return "NAV_RELPOSNED";
+    break;
+  default:
+    return "unknown UBX message";
+    break;
   }
 }
 
 const char *gps_parse_result_string(gps_parse_result_t result) {
   switch (result) {
-    case GPS_PARSE_RESULT_OK: return "OK"; break;
-    case GPS_PARSE_RESULT_NO_MATCH: return "NO_MATCH"; break;
-    case GPS_PARSE_RESULT_MESSAGE_EMPTY: return "MESSAGE_EMPTY"; break;
-    case GPS_PARSE_RESULT_MESAGE_LENGTH: return "MESAGE_LENGTH"; break;
-    case GPS_PARSE_RESULT_MESSAGE_UNDEFINED: return "MESSAGE_UNDEFINED"; break;
-    case GPS_PARSE_RESULT_FIELD_ERROR: return "FIELD_ERROR"; break;
-    case GPS_PARSE_RESULT_CHECKSUM: return "CHECKSUM"; break;
-    default: return "unknown PARSE RESULT"; break;
+  case GPS_PARSE_RESULT_OK:
+    return "OK";
+    break;
+  case GPS_PARSE_RESULT_NO_MATCH:
+    return "NO_MATCH";
+    break;
+  case GPS_PARSE_RESULT_MESSAGE_EMPTY:
+    return "MESSAGE_EMPTY";
+    break;
+  case GPS_PARSE_RESULT_MESAGE_LENGTH:
+    return "MESAGE_LENGTH";
+    break;
+  case GPS_PARSE_RESULT_MESSAGE_UNDEFINED:
+    return "MESSAGE_UNDEFINED";
+    break;
+  case GPS_PARSE_RESULT_FIELD_ERROR:
+    return "FIELD_ERROR";
+    break;
+  case GPS_PARSE_RESULT_CHECKSUM:
+    return "CHECKSUM";
+    break;
+  default:
+    return "unknown PARSE RESULT";
+    break;
   }
 }
 
 const char *gps_fix_state_string(uint8_t fix_state) {
   switch (fix_state) {
-    case 0: return "FIX NOT AVAILABLE OR INVALID"; break;
-    case 1: return "Standard GPS (2D/3D)"; break;
-    case 2: return "DIFFERENTIAL GPS"; break;
-    case 3: return "RTK Fixed"; break;
-    case 4: return "RTK Float"; break;
-    case 5: return "DEAD RECKONING MODE FIX VALID"; break;
-    default: return "unknown FIX STATE"; break;
+  case 0:
+    return "FIX NOT AVAILABLE OR INVALID";
+    break;
+  case 1:
+    return "Standard GPS (2D/3D)";
+    break;
+  case 2:
+    return "DIFFERENTIAL GPS";
+    break;
+  case 3:
+    return "RTK Fixed";
+    break;
+  case 4:
+    return "RTK Float";
+    break;
+  case 5:
+    return "DEAD RECKONING MODE FIX VALID";
+    break;
+  default:
+    return "unknown FIX STATE";
+    break;
   }
 }
 const char *gps_fix_mode_string(uint8_t fix_mode) {
   switch (fix_mode) {
-    case 0: return "FIX NOT AVAILABLE"; break;
-    case 1: return "2D"; break;
-    case 2: return "3D"; break;
-    default: return "unknown FIX MODE"; break;
+  case 0:
+    return "FIX NOT AVAILABLE";
+    break;
+  case 1:
+    return "2D";
+    break;
+  case 2:
+    return "3D";
+    break;
+  default:
+    return "unknown FIX MODE";
+    break;
   }
 }
 
@@ -105,9 +164,12 @@ int gps_match_message(gps_protocol_and_message *match, const char *buffer,
   match->message = -1;
   if (protocol == GPS_PROTOCOL_TYPE_NMEA) {
 
-    if (strncmp(buffer, "GGA", 3) == 0) match->message = GPS_NMEA_TYPE_GGA;
-    else if (strncmp(buffer, "GSA", 3) == 0) match->message = GPS_NMEA_TYPE_GSA;
-    else if (strncmp(buffer, "VTG", 3) == 0) match->message = GPS_NMEA_TYPE_VTG;
+    if (strncmp(buffer, "GGA", 3) == 0)
+      match->message = GPS_NMEA_TYPE_GGA;
+    else if (strncmp(buffer, "GSA", 3) == 0)
+      match->message = GPS_NMEA_TYPE_GSA;
+    else if (strncmp(buffer, "VTG", 3) == 0)
+      match->message = GPS_NMEA_TYPE_VTG;
 
   } else if (protocol == GPS_PROTOCOL_TYPE_UBX) {
     if (buffer[0] != 1) { // match NAV message type
@@ -135,7 +197,8 @@ static inline double gps_deg_min_to_deg(double value) {
   return deg + (value - deg * 100.0) / 60.0;
 }
 
-gps_parse_result_t gps_parse_nmea_gga(gps_nmea_gga_t *data, const char *buffer) {
+gps_parse_result_t gps_parse_nmea_gga(gps_nmea_gga_t *data,
+                                      const char *buffer) {
   char *ch;
   int index = -1;
   ch = strpbrk(buffer, ",");
@@ -187,7 +250,8 @@ gps_parse_result_t gps_parse_nmea_gga(gps_nmea_gga_t *data, const char *buffer) 
   return GPS_PARSE_RESULT_OK;
 }
 
-gps_parse_result_t gps_parse_nmea_gsa(gps_nmea_gsa_t *data, const char *buffer) {
+gps_parse_result_t gps_parse_nmea_gsa(gps_nmea_gsa_t *data,
+                                      const char *buffer) {
   char *ch;
   int index = -1;
   ch = strpbrk(buffer, ",");
@@ -216,7 +280,8 @@ gps_parse_result_t gps_parse_nmea_gsa(gps_nmea_gsa_t *data, const char *buffer) 
   return GPS_PARSE_RESULT_OK;
 }
 
-gps_parse_result_t gps_parse_nmea_vtg(gps_nmea_vtg_t *data, const char *buffer) {
+gps_parse_result_t gps_parse_nmea_vtg(gps_nmea_vtg_t *data,
+                                      const char *buffer) {
   char *ch;
   int index = -1;
   ch = strpbrk(buffer, ",");
@@ -396,6 +461,45 @@ void gps_parse_ubx_hpposllh(gps_ubx_hpposllh_t *data, uint8_t *buffer) {
   data->hMSL += data->hMSLHp * 0.1f;
 }
 
+void gps_parse_ubx_relposned(gps_ubx_relposned_t *data, uint8_t *buffer) {
+  data->version = *(uint8_t *)buffer;
+  buffer += sizeof(uint8_t);
+  buffer += sizeof(uint8_t); // reserved
+  data->refStationId = *(uint16_t *)buffer;
+  buffer += sizeof(uint16_t);
+  data->iTOW  = *(uint64_t *)buffer;
+  buffer += sizeof(uint64_t);
+  data->relPosN = (double)(*(int64_t *)buffer) * 0.01;
+  buffer += sizeof(int64_t);
+  data->relPosE = (double)(*(int64_t *)buffer) * 0.01;
+  buffer += sizeof(int64_t);
+  data->relPosD = (double)(*(int64_t *)buffer) * 0.01;
+  buffer += sizeof(int64_t);
+  data->relPosLength = (double)(*(int64_t *)buffer) * 0.01;
+  buffer += sizeof(int64_t);
+  data->relPosHeading = (double)(*(int64_t *)buffer) * 1e-5;
+  buffer += sizeof(int64_t);
+  buffer += sizeof(uint8_t) * 4; // reserved2
+  data->relPosHPN = (double)(*(int8_t *)buffer) * 0.0001;
+  buffer += sizeof(int8_t);
+  data->relPosHPE = (double)(*(int8_t *)buffer) * 0.0001;
+  buffer += sizeof(int8_t);
+  data->relPosHPD = (double)(*(int8_t *)buffer) * 0.0001;
+  buffer += sizeof(int8_t);
+  data->relPosHPLength = (double)(*(int8_t *)buffer) * 0.0001;
+  buffer += sizeof(int8_t);
+  data->accN = (double)(*(uint64_t *)buffer) * 0.0001;
+  buffer += sizeof(uint64_t);
+  data->accE = (double)(*(uint64_t *)buffer) * 0.0001;
+  buffer += sizeof(uint64_t);
+  data->accD = (double)(*(uint64_t *)buffer) * 0.0001;
+  buffer += sizeof(uint64_t);
+  data->accLength = (double)(*(uint64_t *)buffer) * 0.0001;
+  buffer += sizeof(uint64_t);
+  data->accHeading = (double)(*(uint64_t *)buffer) * 1e-5;
+  buffer += sizeof(uint64_t);
+}
+
 void gps_nmea_fields_gga(FILE *out) {
   fprintf(out, "_timestamp,time,latitude,north_south,longitude,east_ovest,fix,"
                "satellites,horizontal_diluition_precision,fix_state,altitude,"
@@ -437,6 +541,13 @@ void gps_ubx_fields_hpposecef(FILE *out) {
 void gps_ubx_fields_hpposllh(FILE *out) {
   fprintf(out, "_timestamp,version,iTOW,lon,lat,height,hMSL,lonHp,latHp,"
                "heightHp,hMSLHp,hAcc,vAcc\n");
+  fflush(out);
+}
+
+void gps_ubx_fields_relposned(FILE *out) {
+  fprintf(out, "_timestamp,version,refStationId,iTOW,relPosN,relPosE,relPosD,relPosLength,"
+               "relPosHeading,relPosHPN,relPosHPE,relPosHPD,relPosHPLength,"
+               "accN,accE,accD,accLength,accHeading\n");
   fflush(out);
 }
 
@@ -548,6 +659,30 @@ void gps_ubx_value_to_file_hpposllh(FILE *out, gps_ubx_hpposllh_t *data) {
   fflush(out);
 }
 
+void gps_ubx_value_to_file_relposned(FILE *out, gps_ubx_relposned_t *data) {
+  fprintf(out,
+          "%" PRIu64 ",%" PRIu8 ",%" PRIu16 ",%" PRIu64 ",%.9f"
+          ",%.9f"
+          ",%.9f"
+          ",%.9f"
+          ",%.9f"
+          ",%.9f"
+          ",%.9f"
+          ",%.9f"
+          ",%.9f"
+          ",%.9f"
+          ",%.9f"
+          ",%.9f"
+          ",%.9f"
+          "\n",
+          data->_timestamp, data->version, data->refStationId, data->iTOW,
+          data->relPosN, data->relPosE, data->relPosD, data->relPosLength,
+          data->relPosHeading, data->relPosHPN, data->relPosHPE,
+          data->relPosHPD, data->relPosHPLength, data->accN, data->accE,
+          data->accD, data->accLength, data->accHeading);
+  fflush(out);
+}
+
 gps_parse_result_t gps_parse_buffer(gps_parsed_data_t *data,
                                     gps_protocol_and_message *match,
                                     const char *buffer, uint64_t timestamp) {
@@ -588,6 +723,10 @@ gps_parse_result_t gps_parse_buffer(gps_parsed_data_t *data,
     case GPS_UBX_TYPE_NAV_HPPOSLLH:
       data->hpposllh._timestamp = timestamp;
       gps_parse_ubx_hpposllh(&data->hpposllh, (uint8_t *)buffer);
+      break;
+    case GPS_UBX_TYPE_NAV_RELPOSNED:
+      data->relposned._timestamp = timestamp;
+      gps_parse_ubx_relposned(&data->relposned, (uint8_t *)buffer);
       break;
     default:
       return GPS_PARSE_RESULT_NO_MATCH;
@@ -686,12 +825,16 @@ void gps_to_file(gps_files_t *files, gps_parsed_data_t *data,
       gps_ubx_value_to_file_hpposllh(files->ubx[GPS_UBX_TYPE_NAV_HPPOSLLH],
                                      &data->hpposllh);
       break;
-      default:
+    case GPS_UBX_TYPE_NAV_RELPOSNED:
+      gps_ubx_value_to_file_relposned(files->ubx[GPS_UBX_TYPE_NAV_RELPOSNED],
+                                      &data->relposned);
+      break;
+    default:
       break;
     }
     break;
-    default:
-      break;
+  default:
+    break;
   }
 }
 
@@ -705,4 +848,5 @@ void gps_header_to_file(gps_files_t *files) {
   gps_ubx_fields_pvt(files->ubx[GPS_UBX_TYPE_NAV_PVT]);
   gps_ubx_fields_hpposecef(files->ubx[GPS_UBX_TYPE_NAV_HPPOSECEF]);
   gps_ubx_fields_hpposllh(files->ubx[GPS_UBX_TYPE_NAV_HPPOSLLH]);
+  gps_ubx_fields_relposned(files->ubx[GPS_UBX_TYPE_NAV_RELPOSNED]);
 }

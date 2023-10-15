@@ -7,17 +7,11 @@
 #include <stdlib.h>
 
 namespace Helper {
-template <bool FITS8, bool FITS16> struct Index {
-  using Type = uint32_t;
-};
+template <bool FITS8, bool FITS16> struct Index { using Type = uint32_t; };
 
-template <> struct Index<false, true> {
-  using Type = uint16_t;
-};
+template <> struct Index<false, true> { using Type = uint16_t; };
 
-template <> struct Index<true, true> {
-  using Type = uint8_t;
-};
+template <> struct Index<true, true> { using Type = uint8_t; };
 } // namespace Helper
 
 template <typename T, size_t S,
