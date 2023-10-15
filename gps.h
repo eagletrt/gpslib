@@ -82,117 +82,134 @@ typedef struct gps_nmea_gsa_t {
   double vertical_diluition_precision;
 } gps_nmea_gsa_t;
 
+// FIELD(byte_offset, original_type, struct_type, scale, offset, unit, name)
+#define GPS_UBX_DOP_FIELDS                                                                                             \
+  FIELD(0, uint32_t, uint32_t, "%" PRIu32, 1, 0, "ms", iTOW)                                                           \
+  FIELD(4, uint16_t, double, "%f", 0.01, 0, "", gDOP)                                                                  \
+  FIELD(6, uint16_t, double, "%f", 0.01, 0, "", pDOP)                                                                  \
+  FIELD(8, uint16_t, double, "%f", 0.01, 0, "", tDOP)                                                                  \
+  FIELD(10, uint16_t, double, "%f", 0.01, 0, "", vDOP)                                                                 \
+  FIELD(12, uint16_t, double, "%f", 0.01, 0, "", hDOP)                                                                 \
+  FIELD(14, uint16_t, double, "%f", 0.01, 0, "", nDOP)                                                                 \
+  FIELD(16, uint16_t, double, "%f", 0.01, 0, "", eDOP)
+
+// FIELD(byte_offset, original_type, struct_type, scale, offset, unit, name)
+#define GPS_UBX_PVT_FIELDS                                                                                             \
+  FIELD(0, uint32_t, uint32_t, "%" PRIu32, 1, 0, "ms", iTOW)                                                           \
+  FIELD(4, uint16_t, uint16_t, "%" PRIu16, 1, 0, "y", year)                                                            \
+  FIELD(6, uint8_t, uint8_t, "%" PRIu8, 1, 0, "month", month)                                                          \
+  FIELD(7, uint8_t, uint8_t, "%" PRIu8, 1, 0, "day", day)                                                              \
+  FIELD(8, uint8_t, uint8_t, "%" PRIu8, 1, 0, "hour", hour)                                                            \
+  FIELD(9, uint8_t, uint8_t, "%" PRIu8, 1, 0, "min", min)                                                              \
+  FIELD(10, uint8_t, uint8_t, "%" PRIu8, 1, 0, "sec", sec)                                                             \
+  FIELD(11, uint8_t, uint8_t, "%" PRIu8, 1, 0, "", valid)                                                              \
+  FIELD(12, uint32_t, uint32_t, "%" PRIu32, 1, 0, "ns", tAcc)                                                          \
+  FIELD(16, int32_t, int32_t, "%" PRIi32, 1, 0, "ns", nano)                                                            \
+  FIELD(20, uint8_t, uint8_t, "%" PRIu8, 1, 0, "", fixType)                                                            \
+  FIELD(21, uint8_t, uint8_t, "%" PRIu8, 1, 0, "", flags)                                                              \
+  FIELD(22, uint8_t, uint8_t, "%" PRIu8, 1, 0, "", flags2)                                                             \
+  FIELD(23, uint8_t, uint8_t, "%" PRIu8, 1, 0, "", numSV)                                                              \
+  FIELD(24, int32_t, double, "%f", 1e-7, 0, "deg", lon)                                                                \
+  FIELD(28, int32_t, double, "%f", 1e-7, 0, "deg", lat)                                                                \
+  FIELD(32, int32_t, double, "%f", 1e-3, 0, "m", height)                                                               \
+  FIELD(36, int32_t, double, "%f", 1e-3, 0, "m", hMSL)                                                                 \
+  FIELD(40, uint32_t, double, "%f", 1e-3, 0, "m", hAcc)                                                                \
+  FIELD(44, uint32_t, double, "%f", 1e-3, 0, "m", vAcc)                                                                \
+  FIELD(48, int32_t, double, "%f", 1e-3, 0, "m/s", velN)                                                               \
+  FIELD(52, int32_t, double, "%f", 1e-3, 0, "m/s", velE)                                                               \
+  FIELD(56, int32_t, double, "%f", 1e-3, 0, "m/s", velD)                                                               \
+  FIELD(60, int32_t, double, "%f", 1e-3, 0, "m/s", gSpeed)                                                             \
+  FIELD(64, int32_t, double, "%f", 1e-5, 0, "deg", headMot)                                                            \
+  FIELD(68, uint32_t, double, "%f", 1e-3, 0, "m/s", sAcc)                                                              \
+  FIELD(72, uint32_t, double, "%f", 1e-5, 0, "deg", headAcc)                                                           \
+  FIELD(76, uint16_t, double, "%f", 0.01, 0, "", pDOP)                                                                 \
+  FIELD(84, int32_t, double, "%f", 1e-5, 0, "deg", headVeh)                                                            \
+  FIELD(88, int32_t, double, "%f", 1e-2, 0, "deg", magDec)                                                             \
+  FIELD(90, uint32_t, double, "%f", 1e-2, 0, "deg", magAcc)
+
+// FIELD(byte_offset, original_type, struct_type, scale, offset, unit, name)
+#define GPS_UBX_HPPOSECEF_FIELDS                                                                                       \
+  FIELD(0, uint8_t, uint8_t, "%" PRIu8, 1, 0, "", version)                                                             \
+  FIELD(4, uint32_t, uint32_t, "%" PRIu32, 1, 0, "ms", iTOW)                                                           \
+  FIELD(8, int32_t, double, "%f", 1e-2, 0, "m", ecefX)                                                                 \
+  FIELD(12, int32_t, double, "%f", 1e-2, 0, "m", ecefY)                                                                \
+  FIELD(16, int32_t, double, "%f", 1e-2, 0, "m", ecefZ)                                                                \
+  FIELD(20, int8_t, double, "%f", 1e-4, 0, "m", ecefXHp)                                                               \
+  FIELD(21, int8_t, double, "%f", 1e-4, 0, "m", ecefYHp)                                                               \
+  FIELD(22, int8_t, double, "%f", 1e-4, 0, "m", ecefZHp)                                                               \
+  FIELD(24, uint32_t, uint32_t, "%" PRIu32, 1e-4, 0, "m", pAcc)
+
+// FIELD(byte_offset, original_type, struct_type, scale, offset, unit, name)
+#define GPS_UBX_HPPOSLLH_FIELDS                                                                                        \
+  FIELD(0, uint8_t, uint8_t, "%" PRIu8, 1, 0, "", version)                                                             \
+  FIELD(4, uint32_t, uint32_t, "%" PRIu32, 1, 0, "ms", iTOW)                                                           \
+  FIELD(8, int32_t, double, "%f", 1e-7, 0, "deg", lon)                                                                 \
+  FIELD(12, int32_t, double, "%f", 1e-7, 0, "deg", lat)                                                                \
+  FIELD(16, int32_t, double, "%f", 1e-3, 0, "m", height)                                                               \
+  FIELD(20, int32_t, double, "%f", 1e-3, 0, "m", hMSL)                                                                 \
+  FIELD(24, int8_t, double, "%f", 1e-9, 0, "deg", lonHp)                                                               \
+  FIELD(25, int8_t, double, "%f", 1e-9, 0, "deg", latHp)                                                               \
+  FIELD(26, int8_t, double, "%f", 1e-4, 0, "m", heightHp)                                                              \
+  FIELD(27, int8_t, double, "%f", 1e-4, 0, "m", hMSLHp)                                                                \
+  FIELD(28, uint32_t, double, "%f", 1e-4, 0, "m", hAcc)                                                                \
+  FIELD(32, uint32_t, double, "%f", 1e-4, 0, "m", vAcc)
+
+// FIELD(byte_offset, original_type, struct_type, scale, offset, unit, name)
+#define GPS_UBX_RELPOSNED_FIELDS                                                                                       \
+  FIELD(0, uint8_t, uint8_t, "%" PRIu8, 1, 0, "", version)                                                             \
+  FIELD(2, uint16_t, uint16_t, "%" PRIu16, 1, 0, "", refStationId)                                                     \
+  FIELD(4, uint32_t, uint32_t, "%" PRIu32, 1, 0, "ms", iTOW)                                                           \
+  FIELD(8, int64_t, double, "%f", 0.01, 0, "m", relPosN)                                                               \
+  FIELD(12, int64_t, double, "%f", 0.01, 0, "m", relPosE)                                                              \
+  FIELD(16, int64_t, double, "%f", 0.01, 0, "m", relPosD)                                                              \
+  FIELD(20, int64_t, double, "%f", 0.01, 0, "m", relPosLength)                                                         \
+  FIELD(24, int64_t, double, "%f", 1e-5, 0, "deg", relPosHeading)                                                      \
+  FIELD(32, int8_t, double, "%f", 0.1, 0, "mm", relPosHPN)                                                             \
+  FIELD(33, int8_t, double, "%f", 0.1, 0, "mm", relPosHPE)                                                             \
+  FIELD(34, int8_t, double, "%f", 0.1, 0, "mm", relPosHPD)                                                             \
+  FIELD(35, int8_t, double, "%f", 0.1, 0, "mm", relPosHPLength)                                                        \
+  FIELD(36, uint32_t, double, "%f", 0.1, 0, "mm", accN)                                                                \
+  FIELD(40, uint32_t, double, "%f", 0.1, 0, "mm", accE)                                                                \
+  FIELD(44, uint32_t, double, "%f", 0.1, 0, "mm", accD)                                                                \
+  FIELD(48, uint32_t, double, "%f", 0.1, 0, "mm", accLength)                                                           \
+  FIELD(52, uint32_t, double, "%f", 1e-5, 0, "deg", accHeading)                                                        \
+  FIELD(60, uint32_t, uint32_t, "%" PRIu32, 1, 0, "flags", flags)
+
 // Dilution of precision
 typedef struct gps_ubx_dop_t {
   uint64_t _timestamp;
-  uint32_t iTOW; // [ms]
-  float gDOP;    // [*0.01] uint16_t
-  float pDOP;    // [*0.01] uint16_t
-  float tDOP;    // [*0.01] uint16_t
-  float vDOP;    // [*0.01] uint16_t
-  float hDOP;    // [*0.01] uint16_t
-  float nDOP;    // [*0.01] uint16_t
-  float eDOP;    // [*0.01] uint16_t
+#define FIELD(byte_offset, original_type, struct_type, formatter, scale, offset, unit, name) struct_type name;
+  GPS_UBX_DOP_FIELDS
+#undef FIELD
 } gps_ubx_dop_t;
-
 // Navigation Position Velocity Time Solution
 typedef struct gps_ubx_pvt_t {
   uint64_t _timestamp;
-  uint32_t iTOW;       // [ms]
-  uint16_t year;       // [y]
-  uint8_t month;       // [month]
-  uint8_t day;         // [day]
-  uint8_t hour;        // [hour]
-  uint8_t min;         // [min]
-  uint8_t sec;         // [second]
-  uint8_t valid;       // []
-  uint32_t tAcc;       // [ns]
-  int32_t nano;        // [ns]
-  uint8_t fixType;     // []
-  uint8_t flags;       // []
-  uint8_t flags2;      // []
-  uint8_t numSV;       // []
-  double lon;          // [deg*e-7] int32_t
-  double lat;          // [deg*e-7] int32_t
-  int32_t height;      // [mm]
-  int32_t hMSL;        // [mm]
-  uint32_t hAcc;       // [mm]
-  uint32_t vAcc;       // [mm]
-  int32_t velN;        // [mm/s]
-  int32_t velE;        // [mm/s]
-  int32_t velD;        // [mm/s]
-  int32_t gSpeed;      // [mm/s]
-  double headMot;      // [deg*e-5] int32_t
-  uint32_t sAcc;       // [mm/s]
-  double headAcc;      // [deg*e-5] uint32_t
-  uint16_t pDOP;       // [*0.01]
-  uint8_t reserved[6]; // []
-  double headVeh;      // [deg*e-5] int32_t
-  double magDec;       // [deg*e-2] int16_t
-  double magAcc;       // [deg*e-2] uint16_t
+#define FIELD(byte_offset, original_type, struct_type, formatter, scale, offset, unit, name) struct_type name;
+  GPS_UBX_PVT_FIELDS
+#undef FIELD
 } gps_ubx_pvt_t;
 
 // High Precision Position Solution in ECEF
 typedef struct gps_ubx_hpposecef_t {
   uint64_t _timestamp;
-  uint8_t version;
-  uint8_t reserved[3];
-  uint32_t iTOW;     // [ms]
-  double ecefX;      // [cm] int32_t
-  double ecefY;      // [cm] int32_t
-  double ecefZ;      // [cm] int32_t
-  int8_t ecefXHp;    // [mm*0.1]
-  int8_t ecefYHp;    // [mm*0.1]
-  int8_t ecefZHp;    // [mm*0.1]
-  uint8_t reserved2; // []
-  float pAcc;        // [mm*0.1] uint32_t
+#define FIELD(byte_offset, original_type, struct_type, formatter, scale, offset, unit, name) struct_type name;
+  GPS_UBX_HPPOSECEF_FIELDS
+#undef FIELD
 } gps_ubx_hpposecef_t;
 
 // High Precision Geodetic Position Solution
 typedef struct gps_ubx_hpposllh_t {
   uint64_t _timestamp;
-  uint8_t version;
-  uint8_t reserved[3];
-  uint32_t iTOW;
-  double lon;      // [deg*e-7] int32_t
-  double lat;      // [deg*e-7] int32_t
-  float height;    // [mm] int32_t
-  float hMSL;      // [mm] int32_t
-  int8_t lonHp;    // [deg*e-9]
-  int8_t latHp;    // [deg*e-9]
-  int8_t heightHp; // [mm*0.1]
-  int8_t hMSLHp;   // [mm*0.1]
-  uint32_t hAcc;   // [mm*0.1]
-  uint32_t vAcc;   // [mm*0.1]
+#define FIELD(byte_offset, original_type, struct_type, formatter, scale, offset, unit, name) struct_type name;
+  GPS_UBX_HPPOSLLH_FIELDS
+#undef FIELD
 } gps_ubx_hpposllh_t;
-
-// FIELD(byte_offset, original_type, struct_type, scale, offset, unit, name)
-#define GPS_UBX_RELPOSNED_FIELDS                                               \
-  FIELD( 0, uint8_t, uint8_t, "%" PRIu8, 1, 0, "", version)                     \
-  FIELD( 2, uint16_t, uint16_t, "%" PRIu16, 1, 0, "", refStationId)             \
-  FIELD( 4, uint64_t, uint64_t, "%" PRIu64, 1, 0, "ms", iTOW)                   \
-  FIELD( 8, int64_t, double, "%f", 0.01, 0, "m", relPosN)                       \
-  FIELD(12, int64_t, double, "%f", 0.01, 0, "m", relPosE)                      \
-  FIELD(16, int64_t, double, "%f", 0.01, 0, "m", relPosD)                      \
-  FIELD(20, int64_t, double, "%f", 0.01, 0, "m", relPosLength)                 \
-  FIELD(24, int64_t, double, "%f", 1e-5, 0, "deg", relPosHeading)              \
-  FIELD(32, int8_t, double, "%f", 0.1, 0, "mm", relPosHPN)                     \
-  FIELD(33, int8_t, double, "%f", 0.1, 0, "mm", relPosHPE)                     \
-  FIELD(34, int8_t, double, "%f", 0.1, 0, "mm", relPosHPD)                     \
-  FIELD(35, int8_t, double, "%f", 0.1, 0, "mm", relPosHPLength)                \
-  FIELD(36, uint64_t, double, "%f", 0.1, 0, "mm", accN)                        \
-  FIELD(40, uint64_t, double, "%f", 0.1, 0, "mm", accE)                        \
-  FIELD(44, uint64_t, double, "%f", 0.1, 0, "mm", accD)                        \
-  FIELD(48, uint64_t, double, "%f", 0.1, 0, "mm", accLength)                   \
-  FIELD(52, uint64_t, double, "%f", 1e-5, 0, "deg", accHeading)                \
-  FIELD(60, uint64_t, uint64_t, "%" PRIu64, 1, 0, "flags", flags)
 
 typedef struct gps_ubx_relposned_t {
   uint64_t _timestamp;
 
-#define FIELD(byte_offset, original_type, struct_type, formatter, scale,       \
-              offset, unit, name)                                              \
-  struct_type name;
+#define FIELD(byte_offset, original_type, struct_type, formatter, scale, offset, unit, name) struct_type name;
   GPS_UBX_RELPOSNED_FIELDS
 #undef FIELD
 
@@ -228,11 +245,9 @@ const char *gps_fix_mode_string(uint8_t fix_mode);
 
 // given buffer and protocol, match the type of message
 // 0 if ok, -1 if error
-int gps_match_message(gps_protocol_and_message *match, const char *buffer,
-                      gps_protocol_type protocol);
-gps_parse_result_t gps_parse_buffer(gps_parsed_data_t *data,
-                                    gps_protocol_and_message *match,
-                                    const char *buffer, uint64_t timestamp);
+int gps_match_message(gps_protocol_and_message *match, const char *buffer, gps_protocol_type protocol);
+gps_parse_result_t gps_parse_buffer(gps_parsed_data_t *data, gps_protocol_and_message *match, const char *buffer,
+                                    uint64_t timestamp);
 
 typedef struct gps_files_t {
   FILE *nmea[GPS_NMEA_TYPE_SIZE];
@@ -243,6 +258,5 @@ void gps_get_message_name(gps_protocol_and_message *match, char *buff);
 void gps_open_files(gps_files_t *files, const char *path);
 void gps_close_files(gps_files_t *files);
 
-void gps_to_file(gps_files_t *files, gps_parsed_data_t *data,
-                 gps_protocol_and_message *match);
+void gps_to_file(gps_files_t *files, gps_parsed_data_t *data, gps_protocol_and_message *match);
 void gps_header_to_file(gps_files_t *files);

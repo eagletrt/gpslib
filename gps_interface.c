@@ -43,8 +43,7 @@ int gps_get_timestamp(gps_serial_port *port, uint64_t *timestamp) {
   return 0;
 }
 
-int gps_interface_open_file(gps_serial_port *new_serial_port,
-                            const char *filename) {
+int gps_interface_open_file(gps_serial_port *new_serial_port, const char *filename) {
   if (filename == NULL)
     return -1;
 
@@ -61,8 +60,7 @@ int gps_interface_open_file(gps_serial_port *new_serial_port,
   return 0;
 }
 
-int gps_interface_open(gps_serial_port *new_serial_port, const char *port,
-                       speed_t speed) {
+int gps_interface_open(gps_serial_port *new_serial_port, const char *port, speed_t speed) {
   if (port == NULL)
     return -1;
 
@@ -98,27 +96,22 @@ int gps_interface_open(gps_serial_port *new_serial_port, const char *port,
   tty.c_lflag &= ~ICANON; // disable canonical mode, in canonical mode input
                           // data is received line by line, usually undesired
                           // when dealing with serial ports
-  tty.c_lflag &=
-      ~ECHO; // if this bit (ECHO) is set, sent characters will be echoed back.
+  tty.c_lflag &= ~ECHO;   // if this bit (ECHO) is set, sent characters will be echoed back.
   tty.c_lflag &= ~ECHOE;
   tty.c_lflag &= ~ECHONL;
-  tty.c_lflag &=
-      ~ISIG; // when the ISIG bit is set, INTR,QUIT and SUSP characters are
-             // interpreted. we don't want this with a serial port
+  tty.c_lflag &= ~ISIG; // when the ISIG bit is set, INTR,QUIT and SUSP characters are
+                        // interpreted. we don't want this with a serial port
   // the c_iflag member of the termios struct contains low-level settings for
   // input processing. the c_iflag member is an int
+  tty.c_iflag &= ~(IXON | IXOFF | IXANY); // clearing IXON,IXOFF,IXANY disable software flow control
   tty.c_iflag &=
-      ~(IXON | IXOFF |
-        IXANY); // clearing IXON,IXOFF,IXANY disable software flow control
-  tty.c_iflag &= ~(IGNBRK | BRKINT | PARMRK | ISTRIP | INLCR | IGNCR |
-                   ICRNL); // clearing all of this bits disable any special
-                           // handling of received bytes, i want raw data
+      ~(IGNBRK | BRKINT | PARMRK | ISTRIP | INLCR | IGNCR | ICRNL); // clearing all of this bits disable any special
+                                                                    // handling of received bytes, i want raw data
   // output modes (c_oflag). the c_oflag member of the termios struct contain
   // low level settings for output processing, we want to disable any special
   // handling of output chars/bytes
   tty.c_oflag &= ~OPOST; // prevent special interpretation of output bytes
-  tty.c_oflag &=
-      ~ONLCR; // prevent conversion of newline to carriage return/line feed
+  tty.c_oflag &= ~ONLCR; // prevent conversion of newline to carriage return/line feed
   // setting VTIME VMIN
   tty.c_cc[VTIME] = 10; // read() will block until either any amount of data is
                         // received or the timeout ocurs
@@ -143,11 +136,9 @@ void gps_interface_close(gps_serial_port *serial_port) {
   serial_port->open = 0;
 }
 
-gps_protocol_type
-gps_interface_get_line(gps_serial_port *port,
-                       char start_sequence[GPS_MAX_START_SEQUENCE_SIZE],
-                       int *start_sequence_size, char line[GPS_MAX_LINE_SIZE],
-                       int *line_size, bool sleep) {
+gps_protocol_type gps_interface_get_line(gps_serial_port *port, char start_sequence[GPS_MAX_START_SEQUENCE_SIZE],
+                                         int *start_sequence_size, char line[GPS_MAX_LINE_SIZE], int *line_size,
+                                         bool sleep) {
   uint8_t c;
   int size = -1;
   *line_size = size;
@@ -195,8 +186,7 @@ gps_interface_get_line(gps_serial_port *port,
         if (read(port->fd, &c, 1) <= 0)
           return GPS_PROTOCOL_TYPE_SIZE;
         // match second syncronyzation byte
-        if (c == GPS_NMEA_SYNC_SECOND_BYTE1 /*G*/ ||
-            c == GPS_NMEA_SYNC_SECOND_BYTE2 /*P*/) {
+        if (c == GPS_NMEA_SYNC_SECOND_BYTE1 /*G*/ || c == GPS_NMEA_SYNC_SECOND_BYTE2 /*P*/) {
           type = GPS_PROTOCOL_TYPE_NMEA;
           size = 0;
           start_sequence[0] = GPS_NMEA_SYNC_FIRST_BYTE;
@@ -222,7 +212,7 @@ gps_interface_get_line(gps_serial_port *port,
       } else if (c == CLK_A) { // CLK_A termination byte
         previous_clk_a = 1;
       } else if (c == CLK_B && previous_clk_a == 1) { // CLK_B termination byte
-        size -= 2; // because line is not updated with CLK_A and CLK_B
+        size -= 2;                                    // because line is not updated with CLK_A and CLK_B
         break;
       } else {
         previous_clk_a = 0;
