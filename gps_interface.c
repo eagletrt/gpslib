@@ -178,6 +178,9 @@ gps_protocol_type gps_interface_get_line(gps_serial_port *port, unsigned char st
           start_sequence[1] = GPS_UBX_SYNC_SECOND_BYTE;
           start_sequence[2] = 0x00;
           *start_sequence_size = 2;
+        } else {
+          size = -1;
+          continue;
         }
         break;
       // first sync byte for nmea message
@@ -198,6 +201,9 @@ gps_protocol_type gps_interface_get_line(gps_serial_port *port, unsigned char st
           start_sequence[3] = 0x00;
           *start_sequence_size = 3;
           ubx_message_size = 0;
+        } else {
+          size = -1;
+          continue;
         }
         break;
       }

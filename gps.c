@@ -138,7 +138,7 @@ int gps_buffer_to_generic_ubx_message(gps_generic_ubx_message_t *message, const 
   message->_size = buffer[2];
   message->_size += buffer[3] << 8;
   if (message->_size + 6 > GPS_MAX_LINE_SIZE) {
-    printf("GPS Interface: exceding max size\n");
+    printf("GPS: exceding max size\n");
     return -1;
   }
   message->_ck_a = buffer[4 + message->_size];
@@ -169,9 +169,7 @@ int gps_match_message(gps_protocol_and_message *match, const char *buffer, gps_p
       match->message = GPS_NMEA_TYPE_VTG;
 
   } else if (protocol == GPS_PROTOCOL_TYPE_UBX) {
-    if (buffer[0] != 1) { // match NAV message type
-      match->message = GPS_UBX_TYPE_SIZE;
-    } else {
+    if (buffer[0] == 1) { // match NAV message type
       for (int i = 0; i < GPS_UBX_TYPE_SIZE; i++) {
         if (buffer[1] == gps_ubx_matches[i]) {
           match->message = i;

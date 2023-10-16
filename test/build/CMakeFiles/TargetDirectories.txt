@@ -1,3 +1,0 @@
-/home/filippo/github/gpslib/test/build/CMakeFiles/test.dir
-/home/filippo/github/gpslib/test/build/CMakeFiles/edit_cache.dir
-/home/filippo/github/gpslib/test/build/CMakeFiles/rebuild_cache.dir

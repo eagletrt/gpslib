@@ -58,4 +58,4 @@ dkms.conf
 
 # VSCode stuff
 .vscode/
-./test/build/
+**/build/

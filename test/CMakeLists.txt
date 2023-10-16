@@ -10,5 +10,5 @@ include_directories(${CMAKE_CURRENT_LIST_DIR}/..)
 
 find_package(Protobuf REQUIRED)
 
-add_executable(test test.cpp ../gps.c ../gps_proto.cpp ../gps.pb.cc)
+add_executable(test test.cpp ../gps.c ../gps_proto.cpp ../gps.pb.cc ../gps_interface.c)
 target_link_libraries(test ${PROTOBUF_LIBRARIES})
