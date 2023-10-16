@@ -300,7 +300,7 @@ gps_parse_result_t gps_parse_nmea_vtg(gps_nmea_vtg_t *data, const char *buffer) 
 }
 
 void gps_parse_ubx_dop(gps_ubx_dop_t *data, uint8_t *buffer) {
-
+  buffer += 4; // align to start of payload
 #define FIELD(byte_offset, original_type, struct_type, formatter, scale, offset, unit, name)                           \
   data->name = ((struct_type)(*(original_type *)(buffer + byte_offset))) * scale + offset;
   GPS_UBX_DOP_FIELDS
@@ -308,7 +308,7 @@ void gps_parse_ubx_dop(gps_ubx_dop_t *data, uint8_t *buffer) {
 }
 
 void gps_parse_ubx_pvt(gps_ubx_pvt_t *data, uint8_t *buffer) {
-
+  buffer += 4; // align to start of payload
 #define FIELD(byte_offset, original_type, struct_type, formatter, scale, offset, unit, name)                           \
   data->name = ((struct_type)(*(original_type *)(buffer + byte_offset))) * scale + offset;
   GPS_UBX_PVT_FIELDS
@@ -316,7 +316,8 @@ void gps_parse_ubx_pvt(gps_ubx_pvt_t *data, uint8_t *buffer) {
 }
 
 void gps_parse_ubx_hpposecef(gps_ubx_hpposecef_t *data, uint8_t *buffer) {
-#define FIELD(byte_offset, original_type, struct_type, formatter, scale, offset, unit, name)                           \
+  buffer += 4; // align to start of payload
+#define FIELD( byte_offset, original_type, struct_type, formatter, scale, offset, unit, name)                           \
   data->name = ((struct_type)(*(original_type *)(buffer + byte_offset))) * scale + offset;
   GPS_UBX_HPPOSECEF_FIELDS
 #undef FIELD
@@ -326,7 +327,8 @@ void gps_parse_ubx_hpposecef(gps_ubx_hpposecef_t *data, uint8_t *buffer) {
 }
 
 void gps_parse_ubx_hpposllh(gps_ubx_hpposllh_t *data, uint8_t *buffer) {
-#define FIELD(byte_offset, original_type, struct_type, formatter, scale, offset, unit, name)                           \
+  buffer += 4; // align to start of payload
+#define FIELD( byte_offset, original_type, struct_type, formatter, scale, offset, unit, name)                           \
   data->name = ((struct_type)(*(original_type *)(buffer + byte_offset))) * scale + offset;
   GPS_UBX_HPPOSLLH_FIELDS
 #undef FIELD
@@ -338,7 +340,7 @@ void gps_parse_ubx_hpposllh(gps_ubx_hpposllh_t *data, uint8_t *buffer) {
 }
 
 void gps_parse_ubx_relposned(gps_ubx_relposned_t *data, uint8_t *buffer) {
-
+  buffer += 4; // align to start of payload
 #define FIELD(byte_offset, original_type, struct_type, formatter, scale, offset, unit, name)                           \
   data->name = ((struct_type)(*(original_type *)(buffer + byte_offset))) * scale + offset;
   GPS_UBX_RELPOSNED_FIELDS
@@ -441,9 +443,10 @@ void gps_nmea_value_to_file_gsa(FILE *out, gps_nmea_gsa_t *data) {
 }
 
 void gps_ubx_value_to_file_dop(FILE *out, gps_ubx_dop_t *data) {
-#define FIELD(byte_offset, original_type, struct_type, formatter, scale, offset, unit, name) "," formatter
   fprintf(out,
-          "%" PRIu64 GPS_UBX_DOP_FIELDS
+          "%" PRIu64
+#define FIELD(byte_offset, original_type, struct_type, formatter, scale, offset, unit, name) "," formatter
+              GPS_UBX_DOP_FIELDS
 #undef FIELD
           "\n",
           data->_timestamp
@@ -455,9 +458,10 @@ void gps_ubx_value_to_file_dop(FILE *out, gps_ubx_dop_t *data) {
 }
 
 void gps_ubx_value_to_file_pvt(FILE *out, gps_ubx_pvt_t *data) {
-#define FIELD(byte_offset, original_type, struct_type, formatter, scale, offset, unit, name) "," formatter
   fprintf(out,
-          "%" PRIu64 GPS_UBX_PVT_FIELDS
+          "%" PRIu64
+#define FIELD(byte_offset, original_type, struct_type, formatter, scale, offset, unit, name) "," formatter
+              GPS_UBX_PVT_FIELDS
 #undef FIELD
           "\n",
           data->_timestamp
@@ -469,9 +473,10 @@ void gps_ubx_value_to_file_pvt(FILE *out, gps_ubx_pvt_t *data) {
 }
 
 void gps_ubx_value_to_file_hpposecef(FILE *out, gps_ubx_hpposecef_t *data) {
-#define FIELD(byte_offset, original_type, struct_type, formatter, scale, offset, unit, name) "," formatter
   fprintf(out,
-          "%" PRIu64 GPS_UBX_HPPOSECEF_FIELDS
+          "%" PRIu64
+#define FIELD(byte_offset, original_type, struct_type, formatter, scale, offset, unit, name) "," formatter
+              GPS_UBX_HPPOSECEF_FIELDS
 #undef FIELD
           "\n",
           data->_timestamp
@@ -483,9 +488,10 @@ void gps_ubx_value_to_file_hpposecef(FILE *out, gps_ubx_hpposecef_t *data) {
 }
 
 void gps_ubx_value_to_file_hpposllh(FILE *out, gps_ubx_hpposllh_t *data) {
-#define FIELD(byte_offset, original_type, struct_type, formatter, scale, offset, unit, name) "," formatter
   fprintf(out,
-          "%" PRIu64 GPS_UBX_HPPOSLLH_FIELDS
+          "%" PRIu64
+#define FIELD(byte_offset, original_type, struct_type, formatter, scale, offset, unit, name) "," formatter
+              GPS_UBX_HPPOSLLH_FIELDS
 #undef FIELD
           "\n",
           data->_timestamp
@@ -497,9 +503,10 @@ void gps_ubx_value_to_file_hpposllh(FILE *out, gps_ubx_hpposllh_t *data) {
 }
 
 void gps_ubx_value_to_file_relposned(FILE *out, gps_ubx_relposned_t *data) {
-#define FIELD(byte_offset, original_type, struct_type, formatter, scale, offset, unit, name) "," formatter
   fprintf(out,
-          "%" PRIu64 GPS_UBX_RELPOSNED_FIELDS
+          "%" PRIu64
+#define FIELD(byte_offset, original_type, struct_type, formatter, scale, offset, unit, name) "," formatter
+              GPS_UBX_RELPOSNED_FIELDS
 #undef FIELD
           "\n",
           data->_timestamp

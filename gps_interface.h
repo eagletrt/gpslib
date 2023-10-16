@@ -19,6 +19,6 @@ int gps_interface_open(gps_serial_port *new_serial_port, const char *port, speed
 int gps_interface_open_file(gps_serial_port *new_serial_port, const char *filename);
 void gps_interface_close(gps_serial_port *serial_port);
 
-gps_protocol_type gps_interface_get_line(gps_serial_port *port, char start_sequence[GPS_MAX_START_SEQUENCE_SIZE],
+gps_protocol_type gps_interface_get_line(gps_serial_port *port, unsigned char start_sequence[GPS_MAX_START_SEQUENCE_SIZE],
                                          int *start_sequence_size, char line[GPS_MAX_LINE_SIZE], int *line_size,
                                          bool sleep);

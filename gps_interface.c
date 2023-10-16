@@ -136,7 +136,7 @@ void gps_interface_close(gps_serial_port *serial_port) {
   serial_port->open = 0;
 }
 
-gps_protocol_type gps_interface_get_line(gps_serial_port *port, char start_sequence[GPS_MAX_START_SEQUENCE_SIZE],
+gps_protocol_type gps_interface_get_line(gps_serial_port *port, unsigned char start_sequence[GPS_MAX_START_SEQUENCE_SIZE],
                                          int *start_sequence_size, char line[GPS_MAX_LINE_SIZE], int *line_size,
                                          bool sleep) {
   uint8_t c;

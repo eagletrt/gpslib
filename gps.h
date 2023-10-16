@@ -156,22 +156,22 @@ typedef struct gps_nmea_gsa_t {
 
 // FIELD(byte_offset, original_type, struct_type, scale, offset, unit, name)
 #define GPS_UBX_RELPOSNED_FIELDS                                                                                       \
-  FIELD(0, uint8_t, uint8_t, "%" PRIu8, 1, 0, "", version)                                                             \
-  FIELD(2, uint16_t, uint16_t, "%" PRIu16, 1, 0, "", refStationId)                                                     \
-  FIELD(4, uint32_t, uint32_t, "%" PRIu32, 1, 0, "ms", iTOW)                                                           \
-  FIELD(8, int64_t, double, "%f", 0.01, 0, "m", relPosN)                                                               \
-  FIELD(12, int64_t, double, "%f", 0.01, 0, "m", relPosE)                                                              \
-  FIELD(16, int64_t, double, "%f", 0.01, 0, "m", relPosD)                                                              \
-  FIELD(20, int64_t, double, "%f", 0.01, 0, "m", relPosLength)                                                         \
-  FIELD(24, int64_t, double, "%f", 1e-5, 0, "deg", relPosHeading)                                                      \
-  FIELD(32, int8_t, double, "%f", 0.1, 0, "mm", relPosHPN)                                                             \
-  FIELD(33, int8_t, double, "%f", 0.1, 0, "mm", relPosHPE)                                                             \
-  FIELD(34, int8_t, double, "%f", 0.1, 0, "mm", relPosHPD)                                                             \
-  FIELD(35, int8_t, double, "%f", 0.1, 0, "mm", relPosHPLength)                                                        \
-  FIELD(36, uint32_t, double, "%f", 0.1, 0, "mm", accN)                                                                \
-  FIELD(40, uint32_t, double, "%f", 0.1, 0, "mm", accE)                                                                \
-  FIELD(44, uint32_t, double, "%f", 0.1, 0, "mm", accD)                                                                \
-  FIELD(48, uint32_t, double, "%f", 0.1, 0, "mm", accLength)                                                           \
+  FIELD(0, uint8_t,   uint8_t, "%" PRIu8, 1, 0, "", version)                                                             \
+  FIELD(2, uint16_t,  uint16_t, "%" PRIu16, 1, 0, "", refStationId)                                                     \
+  FIELD(4, uint32_t,  uint32_t, "%" PRIu32, 1, 0, "ms", iTOW)                                                           \
+  FIELD(8, int32_t,   double, "%f", 0.01, 0, "m", relPosN)                                                               \
+  FIELD(12, int32_t,  double, "%f", 0.01, 0, "m", relPosE)                                                              \
+  FIELD(16, int32_t,  double, "%f", 0.01, 0, "m", relPosD)                                                              \
+  FIELD(20, int32_t,  double, "%f", 0.01, 0, "m", relPosLength)                                                         \
+  FIELD(24, int32_t,  double, "%f", 1e-5, 0, "deg", relPosHeading)                                                      \
+  FIELD(32, int8_t,   double, "%f", 1e-4, 0, "m", relPosHPN)                                                             \
+  FIELD(33, int8_t,   double, "%f", 1e-4, 0, "m", relPosHPE)                                                             \
+  FIELD(34, int8_t,   double, "%f", 1e-4, 0, "m", relPosHPD)                                                             \
+  FIELD(35, int8_t,   double, "%f", 1e-4, 0, "m", relPosHPLength)                                                        \
+  FIELD(36, uint32_t, double, "%f", 1e-4, 0, "m", accN)                                                                \
+  FIELD(40, uint32_t, double, "%f", 1e-4, 0, "m", accE)                                                                \
+  FIELD(44, uint32_t, double, "%f", 1e-4, 0, "m", accD)                                                                \
+  FIELD(48, uint32_t, double, "%f", 1e-4, 0, "m", accLength)                                                           \
   FIELD(52, uint32_t, double, "%f", 1e-5, 0, "deg", accHeading)                                                        \
   FIELD(60, uint32_t, uint32_t, "%" PRIu32, 1, 0, "flags", flags)
 
