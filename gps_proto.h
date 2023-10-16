@@ -178,6 +178,8 @@ typedef struct gps_proto_pack {
   canlib_circular_buffer<gps_ubx_hpposecef_t, CANLIB_CIRCULAR_BUFFER_SIZE> hpposecef;
   canlib_circular_buffer<gps_ubx_hpposllh_t, CANLIB_CIRCULAR_BUFFER_SIZE> hpposllh;
   canlib_circular_buffer<gps_ubx_relposned_t, CANLIB_CIRCULAR_BUFFER_SIZE> relposned;
+  canlib_circular_buffer<gps_ubx_velned_t, CANLIB_CIRCULAR_BUFFER_SIZE> velened;
+
   std::unordered_map<std::string, uint64_t> timers;
 } gps_proto_pack;
 
@@ -195,3 +197,4 @@ void gps_serialize_pvt(gps::NAV_PVT *proto, gps_ubx_pvt_t *data);
 void gps_serialize_hpposecef(gps::NAV_HPPOSECEF *proto, gps_ubx_hpposecef_t *data);
 void gps_serialize_hpposllh(gps::NAV_HPPOSLLH *proto, gps_ubx_hpposllh_t *data);
 void gps_serialize_relposned(gps::NAV_RELPOSNED *proto, gps_ubx_relposned_t *data);
+void gps_serialize_velned(gps::NAV_VELNED *proto, gps_ubx_velned_t *data);

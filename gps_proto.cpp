@@ -69,6 +69,13 @@ void gps_proto_serialize_from_match(gps_protocol_and_message& match, gps::GpsPac
       gps_serialize_relposned(proto->add_relposned(), &data->relposned);
       timers_gps["relposned"] = timestamp;
       break;
+    case GPS_UBX_TYPE_NAV_VELNED:
+      if (downsample_rate &&
+          (1.0e6 / downsample_rate) > (timestamp - timers_gps["velned"]))
+        break;
+      gps_serialize_velned(proto->add_velned(), &data->velned);
+      timers_gps["velned"] = timestamp;
+      break;
     default:
       break;
     }
@@ -255,6 +262,24 @@ void gps_proto_deserialize(gps::GpsPack *proto, network_enums *net_enums,
     (*net_signals)["RELPOSNED"]["accHeading"].push(proto->relposned(i).accheading());
     (*net_signals)["RELPOSNED"]["flags    "].push(proto->relposned(i).flags());
   }
+  for (int i = 0; i < proto->velned_size(); i++) {
+    static uint64_t last_timestamp = 0;
+    if (proto->velned(i)._inner_timestamp() - last_timestamp < resample_us)
+      continue;
+    else
+      last_timestamp = proto->velned(i)._inner_timestamp();
+    (*net_signals)["VELNED"]["_timestamp"].push(proto->velned(i)._inner_timestamp());
+    (*net_signals)["VELNED"]["iTOW"].push(proto->velned(i).itow());
+    (*net_signals)["VELNED"]["velN"].push(proto->velned(i).veln());
+    (*net_signals)["VELNED"]["velE"].push(proto->velned(i).vele());
+    (*net_signals)["VELNED"]["velD"].push(proto->velned(i).veld());
+    (*net_signals)["VELNED"]["speed"].push(proto->velned(i).speed());
+    (*net_signals)["VELNED"]["gSpeed"].push(proto->velned(i).gspeed());
+    (*net_signals)["VELNED"]["heading"].push(proto->velned(i).heading());
+    (*net_signals)["VELNED"]["sAcc"].push(proto->velned(i).sacc());
+    (*net_signals)["VELNED"]["cAcc"].push(proto->velned(i).cacc());
+
+  }
 }
 
 void gps_serialize_gga(gps::GGA *proto, gps_nmea_gga_t *data) {
@@ -382,4 +407,16 @@ void gps_serialize_relposned(gps::NAV_RELPOSNED *proto,
   proto->set_acclength(data->accLength);
   proto->set_accheading(data->accHeading);
   proto->set_flags(data->flags);
+}
+void gps_serialize_velned(gps::NAV_VELNED *proto, gps_ubx_velned_t *data) {
+  proto->set__inner_timestamp(data->_timestamp);
+  proto->set_itow(data->iTOW);
+  proto->set_veln(data->velN);
+  proto->set_vele(data->velE);
+  proto->set_veld(data->velD);
+  proto->set_speed(data->speed);
+  proto->set_gspeed(data->gSpeed);
+  proto->set_heading(data->heading);
+  proto->set_sacc(data->sAcc);
+  proto->set_cacc(data->cAcc);
 }

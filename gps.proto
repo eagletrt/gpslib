@@ -129,6 +129,19 @@ message NAV_RELPOSNED {
   fixed64 flags = 19;
 };
 
+message NAV_VELNED {
+  fixed64 _inner_timestamp = 1;
+  uint32 iTOW = 2;
+  double velN = 3;
+  double velE = 4;
+  double velD = 5;
+  double speed = 6;
+  double gSpeed = 7;
+  double heading = 8;
+  double sAcc = 9;
+  double cAcc = 10;
+}
+
 message GpsPack {
   repeated GGA gga = 1;
   repeated VTG vtg = 2;
@@ -139,4 +152,5 @@ message GpsPack {
   repeated NAV_HPPOSECEF hpposecef = 6;
   repeated NAV_HPPOSLLH hpposllh = 7;
   repeated NAV_RELPOSNED relposned = 8;
+  repeated NAV_VELNED velned = 9;
 }

@@ -32,7 +32,7 @@ typedef enum gps_ubx_message_type {
   GPS_UBX_TYPE_NAV_HPPOSECEF,
   GPS_UBX_TYPE_NAV_HPPOSLLH,
   GPS_UBX_TYPE_NAV_RELPOSNED,
-  // NAV-VELNED
+  GPS_UBX_TYPE_NAV_VELNED,
   GPS_UBX_TYPE_SIZE
 } gps_ubx_message_type;
 
@@ -41,7 +41,8 @@ static const uint8_t gps_ubx_matches[GPS_UBX_TYPE_SIZE] = {
     0x07, // PVT
     0x13, // HPPOSECEF
     0x14, // HPPOSLLH
-    0x3c  // RELPOSNED
+    0x3c, // RELPOSNED
+    0x12 // VELNED
 };
 
 const char *gps_ubx_message_type_string(gps_ubx_message_type type);
@@ -175,6 +176,17 @@ typedef struct gps_nmea_gsa_t {
   FIELD(52, uint32_t, double, "%f", 1e-5, 0, "deg", accHeading)                                                        \
   FIELD(60, uint32_t, uint32_t, "%" PRIu32, 1, 0, "flags", flags)
 
+#define GPS_UBX_VELNED_FIELDS\
+  FIELD(0, uint32_t, uint32_t, "%" PRIu32, 1, 0, "ms", iTOW)\
+  FIELD(4, int32_t, double, "%f", 1e-2, 0, "m/s", velN)\
+  FIELD(8, int32_t, double, "%f", 1e-2, 0, "m/s", velE)\
+  FIELD(12, int32_t, double, "%f", 1e-2, 0, "m/s", velD)\
+  FIELD(16, uint32_t, double, "%f", 1e-2, 0, "m/s", speed)\
+  FIELD(20, uint32_t, double, "%f", 1e-5, 0, "deg", gSpeed)\
+  FIELD(24, int32_t, double, "%f", 1e-5, 0, "deg", heading)\
+  FIELD(28, uint32_t, double, "%f", 1e-2, 0, "m/s", sAcc)\
+  FIELD(32, uint32_t, double, "%f", 1e-5, 0, "deg", cAcc)
+
 // Dilution of precision
 typedef struct gps_ubx_dop_t {
   uint64_t _timestamp;
@@ -208,12 +220,17 @@ typedef struct gps_ubx_hpposllh_t {
 
 typedef struct gps_ubx_relposned_t {
   uint64_t _timestamp;
-
 #define FIELD(byte_offset, original_type, struct_type, formatter, scale, offset, unit, name) struct_type name;
   GPS_UBX_RELPOSNED_FIELDS
 #undef FIELD
-
 } gps_ubx_relposned_t;
+
+typedef struct gps_ubx_velned_t {
+  uint64_t _timestamp;
+#define FIELD(byte_offset, original_type, struct_type, formatter, scale, offset, unit, name) struct_type name;
+  GPS_UBX_VELNED_FIELDS
+#undef FIELD
+} gps_ubx_velned_t;
 
 typedef struct gps_parsed_data_t {
   // NMEA
@@ -226,6 +243,7 @@ typedef struct gps_parsed_data_t {
   gps_ubx_hpposecef_t hpposecef;
   gps_ubx_hpposllh_t hpposllh;
   gps_ubx_relposned_t relposned;
+  gps_ubx_velned_t velned;
 } gps_parsed_data_t;
 
 typedef enum gps_parse_result_t {

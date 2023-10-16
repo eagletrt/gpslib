@@ -38,6 +38,9 @@ const char *gps_ubx_message_type_string(gps_ubx_message_type type) {
   case GPS_UBX_TYPE_NAV_RELPOSNED:
     return "NAV_RELPOSNED";
     break;
+  case GPS_UBX_TYPE_NAV_VELNED:
+    return "NAV_VELNED";
+    break;
   default:
     return "unknown UBX message";
     break;
@@ -171,7 +174,7 @@ int gps_match_message(gps_protocol_and_message *match, const char *buffer, gps_p
   } else if (protocol == GPS_PROTOCOL_TYPE_UBX) {
     if (buffer[0] == 1) { // match NAV message type
       for (int i = 0; i < GPS_UBX_TYPE_SIZE; i++) {
-        if (buffer[1] == gps_ubx_matches[i]) {
+        if ((uint8_t)buffer[1] == gps_ubx_matches[i]) {
           match->message = i;
           break;
         }
@@ -345,6 +348,14 @@ void gps_parse_ubx_relposned(gps_ubx_relposned_t *data, uint8_t *buffer) {
 #undef FIELD
 }
 
+void gps_parse_ubx_velned(gps_ubx_velned_t *data, uint8_t *buffer) {
+  buffer += 4; // align to start of payload
+#define FIELD(byte_offset, original_type, struct_type, formatter, scale, offset, unit, name)                           \
+  data->name = ((struct_type)(*(original_type *)(buffer + byte_offset))) * scale + offset;
+  GPS_UBX_VELNED_FIELDS
+#undef FIELD
+}
+
 void gps_nmea_fields_gga(FILE *out) {
   fprintf(out, "_timestamp,time,latitude,north_south,longitude,east_ovest,fix,"
                "satellites,horizontal_diluition_precision,fix_state,altitude,"
@@ -395,6 +406,13 @@ void gps_ubx_fields_hpposllh(FILE *out) {
 void gps_ubx_fields_relposned(FILE *out) {
 #define FIELD(byte_offset, original_type, struct_type, formatter, scale, offset, unit, name) "," #name
   fprintf(out, "_timestamp" GPS_UBX_RELPOSNED_FIELDS "\n");
+#undef FIELD
+  fflush(out);
+}
+
+void gps_ubx_fields_velned(FILE *out) {
+#define FIELD(byte_offset, original_type, struct_type, formatter, scale, offset, unit, name) "," #name
+  fprintf(out, "_timestamp" GPS_UBX_VELNED_FIELDS "\n");
 #undef FIELD
   fflush(out);
 }
@@ -515,6 +533,21 @@ void gps_ubx_value_to_file_relposned(FILE *out, gps_ubx_relposned_t *data) {
   fflush(out);
 }
 
+void gps_ubx_value_to_file_velned(FILE *out, gps_ubx_velned_t *data) {
+  fprintf(out,
+          "%" PRIu64
+#define FIELD(byte_offset, original_type, struct_type, formatter, scale, offset, unit, name) "," formatter
+              GPS_UBX_VELNED_FIELDS
+#undef FIELD
+          "\n",
+          data->_timestamp
+#define FIELD(byte_offset, original_type, struct_type, formatter, scale, offset, unit, name) , data->name
+              GPS_UBX_VELNED_FIELDS
+#undef FIELD
+  );
+  fflush(out);
+}
+
 gps_parse_result_t gps_parse_buffer(gps_parsed_data_t *data, gps_protocol_and_message *match, const char *buffer,
                                     uint64_t timestamp) {
   if (match->protocol == GPS_PROTOCOL_TYPE_NMEA) {
@@ -558,6 +591,10 @@ gps_parse_result_t gps_parse_buffer(gps_parsed_data_t *data, gps_protocol_and_me
     case GPS_UBX_TYPE_NAV_RELPOSNED:
       data->relposned._timestamp = timestamp;
       gps_parse_ubx_relposned(&data->relposned, (uint8_t *)buffer);
+      break;
+    case GPS_UBX_TYPE_NAV_VELNED:
+      data->velned._timestamp = timestamp;
+      gps_parse_ubx_velned(&data->velned, (uint8_t *)buffer);
       break;
     default:
       return GPS_PARSE_RESULT_NO_MATCH;
@@ -655,6 +692,9 @@ void gps_to_file(gps_files_t *files, gps_parsed_data_t *data, gps_protocol_and_m
     case GPS_UBX_TYPE_NAV_RELPOSNED:
       gps_ubx_value_to_file_relposned(files->ubx[GPS_UBX_TYPE_NAV_RELPOSNED], &data->relposned);
       break;
+    case GPS_UBX_TYPE_NAV_VELNED:
+      gps_ubx_value_to_file_velned(files->ubx[GPS_UBX_TYPE_NAV_VELNED], &data->velned);
+      break;
     default:
       break;
     }
@@ -675,4 +715,5 @@ void gps_header_to_file(gps_files_t *files) {
   gps_ubx_fields_hpposecef(files->ubx[GPS_UBX_TYPE_NAV_HPPOSECEF]);
   gps_ubx_fields_hpposllh(files->ubx[GPS_UBX_TYPE_NAV_HPPOSLLH]);
   gps_ubx_fields_relposned(files->ubx[GPS_UBX_TYPE_NAV_RELPOSNED]);
+  gps_ubx_fields_velned(files->ubx[GPS_UBX_TYPE_NAV_VELNED]);
 }

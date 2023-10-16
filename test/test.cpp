@@ -39,7 +39,7 @@ int main(void) {
         }
         gps_protocol_and_message prot_and_msg;
         if(gps_match_message(&prot_and_msg, line_buffer, protocol) == -1) {
-            printf("Error matching message\n");
+            // printf("Error matching message\n");
             continue;
         }
         
@@ -48,10 +48,8 @@ int main(void) {
             continue;
         }
 
-        if(prot_and_msg.protocol == GPS_PROTOCOL_TYPE_UBX && prot_and_msg.message == GPS_UBX_TYPE_NAV_RELPOSNED) {
-            printf("%f\n", data.relposned.relPosHeading);
-            //gps_to_file(&gps_files, &data, &prot_and_msg);
-        }
+        printf("UBX %s: ", gps_ubx_message_type_string((gps_ubx_message_type)prot_and_msg.message));
+        gps_to_file(&gps_files, &data, &prot_and_msg);
     }
 
     return EXIT_SUCCESS;
