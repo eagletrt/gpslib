@@ -48,7 +48,10 @@ int main(void) {
             continue;
         }
 
-        printf("UBX %s: ", gps_ubx_message_type_string((gps_ubx_message_type)prot_and_msg.message));
+        if(prot_and_msg.protocol == GPS_PROTOCOL_TYPE_NMEA)
+            printf("NMEA %s: ", gps_nmea_message_type_string((gps_nmea_message_type)prot_and_msg.message));
+        else if(prot_and_msg.protocol == GPS_PROTOCOL_TYPE_UBX)
+            printf("UBX %s: ", gps_ubx_message_type_string((gps_ubx_message_type)prot_and_msg.message));
         gps_to_file(&gps_files, &data, &prot_and_msg);
     }
 

@@ -136,7 +136,8 @@ void gps_interface_close(gps_serial_port *serial_port) {
   serial_port->open = 0;
 }
 
-gps_protocol_type gps_interface_get_line(gps_serial_port *port, unsigned char start_sequence[GPS_MAX_START_SEQUENCE_SIZE],
+gps_protocol_type gps_interface_get_line(gps_serial_port *port,
+                                         unsigned char start_sequence[GPS_MAX_START_SEQUENCE_SIZE],
                                          int *start_sequence_size, char line[GPS_MAX_LINE_SIZE], int *line_size,
                                          bool sleep) {
   uint8_t c;
@@ -178,9 +179,9 @@ gps_protocol_type gps_interface_get_line(gps_serial_port *port, unsigned char st
           start_sequence[1] = GPS_UBX_SYNC_SECOND_BYTE;
           start_sequence[2] = 0x00;
           *start_sequence_size = 2;
+          ubx_message_size = 0;
         } else {
           size = -1;
-          continue;
         }
         break;
       // first sync byte for nmea message
@@ -203,7 +204,6 @@ gps_protocol_type gps_interface_get_line(gps_serial_port *port, unsigned char st
           ubx_message_size = 0;
         } else {
           size = -1;
-          continue;
         }
         break;
       }
@@ -236,7 +236,7 @@ gps_protocol_type gps_interface_get_line(gps_serial_port *port, unsigned char st
       line[size] = c;
 
       // check if the size matches the ubx_message_size
-      if (size >= 3 && size - 6 == ubx_message_size)
+      if (size > 2 && size - 5 == ubx_message_size)
         break;
     }
 

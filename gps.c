@@ -318,7 +318,7 @@ void gps_parse_ubx_pvt(gps_ubx_pvt_t *data, uint8_t *buffer) {
 
 void gps_parse_ubx_hpposecef(gps_ubx_hpposecef_t *data, uint8_t *buffer) {
   buffer += 4; // align to start of payload
-#define FIELD( byte_offset, original_type, struct_type, formatter, scale, offset, unit, name)                           \
+#define FIELD(byte_offset, original_type, struct_type, formatter, scale, offset, unit, name)                           \
   data->name = ((struct_type)(*(original_type *)(buffer + byte_offset))) * scale + offset;
   GPS_UBX_HPPOSECEF_FIELDS
 #undef FIELD
@@ -329,7 +329,7 @@ void gps_parse_ubx_hpposecef(gps_ubx_hpposecef_t *data, uint8_t *buffer) {
 
 void gps_parse_ubx_hpposllh(gps_ubx_hpposllh_t *data, uint8_t *buffer) {
   buffer += 4; // align to start of payload
-#define FIELD( byte_offset, original_type, struct_type, formatter, scale, offset, unit, name)                           \
+#define FIELD(byte_offset, original_type, struct_type, formatter, scale, offset, unit, name)                           \
   data->name = ((struct_type)(*(original_type *)(buffer + byte_offset))) * scale + offset;
   GPS_UBX_HPPOSLLH_FIELDS
 #undef FIELD
