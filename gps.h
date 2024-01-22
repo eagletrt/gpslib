@@ -273,7 +273,7 @@ typedef struct gps_files_t {
 } gps_files_t;
 
 void gps_get_message_name(gps_protocol_and_message *match, char *buff);
-void gps_open_files(gps_files_t *files, const char *path);
+int gps_open_files(gps_files_t *files, const char *path);
 void gps_close_files(gps_files_t *files);
 
 void gps_to_file(gps_files_t *files, gps_parsed_data_t *data, gps_protocol_and_message *match);

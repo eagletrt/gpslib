@@ -629,7 +629,7 @@ void gps_construct_filename(char *dest, const char *path, char *helper_buff, gps
   strcat(dest, ".csv");
 }
 
-void gps_open_files(gps_files_t *files, const char *path) {
+int gps_open_files(gps_files_t *files, const char *path) {
   const int message_size = 20;
   const int filepath_size = 100;
   char message[message_size];
@@ -640,13 +640,22 @@ void gps_open_files(gps_files_t *files, const char *path) {
     match.message = i;
     gps_construct_filename(filepath, path, message, &match);
     files->nmea[i] = fopen(filepath, "w");
+    if(files->nmea[i] == NULL) {
+      printf("GPS: could not open file %s\n", filepath);
+      return -1;
+    }
   }
   match.protocol = GPS_PROTOCOL_TYPE_UBX;
   for (int i = 0; i < GPS_UBX_TYPE_SIZE; i++) {
     match.message = i;
     gps_construct_filename(filepath, path, message, &match);
     files->ubx[i] = fopen(filepath, "w");
+    if(files->ubx[i] == NULL) {
+      printf("GPS: could not open file %s\n", filepath);
+      return -1;
+    }
   }
+  return 0;
 }
 
 void gps_close_files(gps_files_t *files) {
