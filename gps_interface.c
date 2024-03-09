@@ -101,6 +101,7 @@ int gps_interface_open(gps_serial_port *new_serial_port, const char *port,
 		return -1;
 
 	new_serial_port->open = 0;
+	new_serial_port->type = USB;
 	new_serial_port->fd = open(port, O_RDWR);
 	// Handle in case of error
 	if (new_serial_port->fd == -1) {
