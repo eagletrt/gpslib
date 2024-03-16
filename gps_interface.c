@@ -90,6 +90,7 @@ int gps_interface_open_file(gps_serial_port *new_serial_port,
 	new_serial_port->port = (char *)malloc(strlen(filename));
 	strcpy(new_serial_port->port, filename);
 	new_serial_port->open = 1;
+	new_serial_port->read_offset = 0;
 	new_serial_port->last_timestamp = 0;
 
 	return 0;
