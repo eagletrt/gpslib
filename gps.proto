@@ -61,18 +61,18 @@ message NAV_PVT {
   uint32 numSV = 15;
   double lon = 16;
   double lat = 17;
-  sint32 height = 18;
-  sint32 hMSL = 19;
-  uint32 hAcc = 20;
-  uint32 vAcc = 21;
-  sint32 velN = 22;
-  sint32 velE = 23;
-  sint32 velD = 24;
-  sint32 gSpeed = 25;
+  double height = 18;
+  double hMSL = 19;
+  double hAcc = 20;
+  double vAcc = 21;
+  double velN = 22;
+  double velE = 23;
+  double velD = 24;
+  double gSpeed = 25;
   double headMot = 26;
-  uint32 sAcc = 27;
+  double sAcc = 27;
   double headAcc = 28;
-  uint32 pDOP = 29;
+  double pDOP = 29;
   double headVeh = 30;
   double magDec = 31;
   double magAcc = 32;
@@ -103,8 +103,8 @@ message NAV_HPPOSLLH {
   sint32 latHp = 9;
   sint32 heightHp = 10;
   sint32 hMSLHp = 11;
-  uint32 hAcc = 12;
-  uint32 vAcc = 13;
+  double hAcc = 12;
+  double vAcc = 13;
 };
 
 message NAV_RELPOSNED {
