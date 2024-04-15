@@ -7,16 +7,27 @@
 #include <stdlib.h>
 
 namespace Helper {
-template <bool FITS8, bool FITS16> struct Index { using Type = uint32_t; };
+template <bool FITS8, bool FITS16>
+struct Index {
+  using Type = uint32_t;
+};
 
-template <> struct Index<false, true> { using Type = uint16_t; };
+template <>
+struct Index<false, true> {
+  using Type = uint16_t;
+};
 
-template <> struct Index<true, true> { using Type = uint8_t; };
-} // namespace Helper
+template <>
+struct Index<true, true> {
+  using Type = uint8_t;
+};
+}  // namespace Helper
 
-template <typename T, size_t S, typename IT = typename Helper::Index<(S <= UINT8_MAX), (S <= UINT16_MAX)>::Type>
+template <typename T, size_t S,
+          typename IT =
+              typename Helper::Index<(S <= UINT8_MAX), (S <= UINT16_MAX)>::Type>
 class canlib_circular_buffer {
-public:
+ public:
   static constexpr IT capacity = static_cast<IT>(S);
 
   using index_t = IT;
@@ -42,7 +53,7 @@ public:
   void inline clear();
   size_t inline offset() const;
 
-private:
+ private:
   T buffer[S];
   T *head;
   T *tail;
@@ -58,7 +69,8 @@ template <typename T, size_t S, typename IT>
 constexpr canlib_circular_buffer<T, S, IT>::canlib_circular_buffer()
     : head(buffer), tail(buffer), _offset(0), count(0) {}
 
-template <typename T, size_t S, typename IT> bool canlib_circular_buffer<T, S, IT>::unshift(T value) {
+template <typename T, size_t S, typename IT>
+bool canlib_circular_buffer<T, S, IT>::unshift(T value) {
   if (head == buffer) {
     head = buffer + capacity;
   }
@@ -76,7 +88,8 @@ template <typename T, size_t S, typename IT> bool canlib_circular_buffer<T, S, I
   }
 }
 
-template <typename T, size_t S, typename IT> bool canlib_circular_buffer<T, S, IT>::push(T value) {
+template <typename T, size_t S, typename IT>
+bool canlib_circular_buffer<T, S, IT>::push(T value) {
   if (++tail == buffer + capacity) {
     tail = buffer;
   }
@@ -95,9 +108,9 @@ template <typename T, size_t S, typename IT> bool canlib_circular_buffer<T, S, I
   }
 }
 
-template <typename T, size_t S, typename IT> T canlib_circular_buffer<T, S, IT>::shift() {
-  if (count == 0)
-    return *head;
+template <typename T, size_t S, typename IT>
+T canlib_circular_buffer<T, S, IT>::shift() {
+  if (count == 0) return *head;
   T result = *head++;
   if (head >= buffer + capacity) {
     head = buffer;
@@ -106,9 +119,9 @@ template <typename T, size_t S, typename IT> T canlib_circular_buffer<T, S, IT>:
   return result;
 }
 
-template <typename T, size_t S, typename IT> T canlib_circular_buffer<T, S, IT>::pop() {
-  if (count == 0)
-    return *tail;
+template <typename T, size_t S, typename IT>
+T canlib_circular_buffer<T, S, IT>::pop() {
+  if (count == 0) return *tail;
   T result = *tail--;
   if (tail < buffer) {
     tail = buffer + capacity - 1;
@@ -117,48 +130,63 @@ template <typename T, size_t S, typename IT> T canlib_circular_buffer<T, S, IT>:
   return result;
 }
 
-template <typename T, size_t S, typename IT> T inline canlib_circular_buffer<T, S, IT>::first() const { return *head; }
+template <typename T, size_t S, typename IT>
+T inline canlib_circular_buffer<T, S, IT>::first() const {
+  return *head;
+}
 
-template <typename T, size_t S, typename IT> T inline canlib_circular_buffer<T, S, IT>::last() const { return *tail; }
+template <typename T, size_t S, typename IT>
+T inline canlib_circular_buffer<T, S, IT>::last() const {
+  return *tail;
+}
 
-template <typename T, size_t S, typename IT> const T &canlib_circular_buffer<T, S, IT>::start() const {
+template <typename T, size_t S, typename IT>
+const T &canlib_circular_buffer<T, S, IT>::start() const {
   return buffer[1];
 }
 
-template <typename T, size_t S, typename IT> const T &canlib_circular_buffer<T, S, IT>::operator[](IT index) const {
-  if (index >= count)
-    return *tail;
+template <typename T, size_t S, typename IT>
+const T &canlib_circular_buffer<T, S, IT>::operator[](IT index) const {
+  if (index >= count) return *tail;
   return *(buffer + ((head - buffer + index) % capacity));
 }
 
-template <typename T, size_t S, typename IT> IT inline canlib_circular_buffer<T, S, IT>::size() const { return count; }
+template <typename T, size_t S, typename IT>
+IT inline canlib_circular_buffer<T, S, IT>::size() const {
+  return count;
+}
 
-template <typename T, size_t S, typename IT> IT inline canlib_circular_buffer<T, S, IT>::available() const {
+template <typename T, size_t S, typename IT>
+IT inline canlib_circular_buffer<T, S, IT>::available() const {
   return capacity - count;
 }
 
-template <typename T, size_t S, typename IT> bool inline canlib_circular_buffer<T, S, IT>::empty() const {
+template <typename T, size_t S, typename IT>
+bool inline canlib_circular_buffer<T, S, IT>::empty() const {
   return count == 0;
 }
 
-template <typename T, size_t S, typename IT> bool inline canlib_circular_buffer<T, S, IT>::full() const {
+template <typename T, size_t S, typename IT>
+bool inline canlib_circular_buffer<T, S, IT>::full() const {
   return count == capacity;
 }
 
-template <typename T, size_t S, typename IT> void inline canlib_circular_buffer<T, S, IT>::clear() {
+template <typename T, size_t S, typename IT>
+void inline canlib_circular_buffer<T, S, IT>::clear() {
   head = tail = buffer;
   count = 0;
 }
 
-template <typename T, size_t S, typename IT> size_t inline canlib_circular_buffer<T, S, IT>::offset() const {
+template <typename T, size_t S, typename IT>
+size_t inline canlib_circular_buffer<T, S, IT>::offset() const {
   return _offset;
 }
 
-#endif // CANLIB_CIRCULAR_BUFFER
+#endif  // CANLIB_CIRCULAR_BUFFER
 
 #ifndef CANLIB_CIRCULAR_BUFFER_SIZE
 #define CANLIB_CIRCULAR_BUFFER_SIZE 2000
-#endif // CANLIB_CIRCULAR_BUFFER_SIZE
+#endif  // CANLIB_CIRCULAR_BUFFER_SIZE
 
 #ifndef CANLIB_PROTO_INTERFACE_TYPES
 #define CANLIB_PROTO_INTERFACE_TYPES
@@ -173,9 +201,12 @@ template <typename T, size_t S, typename IT> size_t inline canlib_circular_buffe
 
 typedef std::string field_name;
 typedef std::string messages_name;
-typedef canlib_circular_buffer<double, CANLIB_CIRCULAR_BUFFER_SIZE> double_buffer;
-typedef canlib_circular_buffer<uint64_t, CANLIB_CIRCULAR_BUFFER_SIZE> uint64_buffer;
-typedef canlib_circular_buffer<std::string, CANLIB_CIRCULAR_BUFFER_SIZE> string_buffer;
+typedef canlib_circular_buffer<double, CANLIB_CIRCULAR_BUFFER_SIZE>
+    double_buffer;
+typedef canlib_circular_buffer<uint64_t, CANLIB_CIRCULAR_BUFFER_SIZE>
+    uint64_buffer;
+typedef canlib_circular_buffer<std::string, CANLIB_CIRCULAR_BUFFER_SIZE>
+    string_buffer;
 
 // structure contains all the messages with a enum value associated
 // the type is unified to uint64_t
@@ -192,6 +223,6 @@ typedef std::unordered_map<messages_name, message_signals> network_signals;
 typedef std::unordered_map<field_name, string_buffer> message_strings;
 typedef std::unordered_map<messages_name, message_strings> network_strings;
 
-#endif // CANLIB_PROTO_INTERFACE_TYPES
+#endif  // CANLIB_PROTO_INTERFACE_TYPES
 
-#endif // GPSLIB_COMMON_TYPES_H
+#endif  // GPSLIB_COMMON_TYPES_H

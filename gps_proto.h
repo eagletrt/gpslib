@@ -1,8 +1,9 @@
 #pragma once
 
-#include "gps.pb.h"
 #include <string>
 #include <unordered_map>
+
+#include "gps.pb.h"
 extern "C" {
 #include "gps.h"
 }
@@ -12,16 +13,27 @@ extern "C" {
 #ifndef CANLIB_CIRCULAR_BUFFER
 #define CANLIB_CIRCULAR_BUFFER
 namespace Helper {
-template <bool FITS8, bool FITS16> struct Index { using Type = uint32_t; };
+template <bool FITS8, bool FITS16>
+struct Index {
+  using Type = uint32_t;
+};
 
-template <> struct Index<false, true> { using Type = uint16_t; };
+template <>
+struct Index<false, true> {
+  using Type = uint16_t;
+};
 
-template <> struct Index<true, true> { using Type = uint8_t; };
-} // namespace Helper
+template <>
+struct Index<true, true> {
+  using Type = uint8_t;
+};
+}  // namespace Helper
 
-template <typename T, size_t S, typename IT = typename Helper::Index<(S <= UINT8_MAX), (S <= UINT16_MAX)>::Type>
+template <typename T, size_t S,
+          typename IT =
+              typename Helper::Index<(S <= UINT8_MAX), (S <= UINT16_MAX)>::Type>
 class canlib_circular_buffer {
-public:
+ public:
   static constexpr IT capacity = static_cast<IT>(S);
 
   using index_t = IT;
@@ -47,7 +59,7 @@ public:
   void inline clear();
   size_t inline offset() const;
 
-private:
+ private:
   T buffer[S];
   T *head;
   T *tail;
@@ -63,7 +75,8 @@ template <typename T, size_t S, typename IT>
 constexpr canlib_circular_buffer<T, S, IT>::canlib_circular_buffer()
     : head(buffer), tail(buffer), count(0), _offset(0) {}
 
-template <typename T, size_t S, typename IT> bool canlib_circular_buffer<T, S, IT>::unshift(T value) {
+template <typename T, size_t S, typename IT>
+bool canlib_circular_buffer<T, S, IT>::unshift(T value) {
   if (head == buffer) {
     head = buffer + capacity;
   }
@@ -81,7 +94,8 @@ template <typename T, size_t S, typename IT> bool canlib_circular_buffer<T, S, I
   }
 }
 
-template <typename T, size_t S, typename IT> bool canlib_circular_buffer<T, S, IT>::push(T value) {
+template <typename T, size_t S, typename IT>
+bool canlib_circular_buffer<T, S, IT>::push(T value) {
   if (++tail == buffer + capacity) {
     tail = buffer;
   }
@@ -100,9 +114,9 @@ template <typename T, size_t S, typename IT> bool canlib_circular_buffer<T, S, I
   }
 }
 
-template <typename T, size_t S, typename IT> T canlib_circular_buffer<T, S, IT>::shift() {
-  if (count == 0)
-    return *head;
+template <typename T, size_t S, typename IT>
+T canlib_circular_buffer<T, S, IT>::shift() {
+  if (count == 0) return *head;
   T result = *head++;
   if (head >= buffer + capacity) {
     head = buffer;
@@ -111,9 +125,9 @@ template <typename T, size_t S, typename IT> T canlib_circular_buffer<T, S, IT>:
   return result;
 }
 
-template <typename T, size_t S, typename IT> T canlib_circular_buffer<T, S, IT>::pop() {
-  if (count == 0)
-    return *tail;
+template <typename T, size_t S, typename IT>
+T canlib_circular_buffer<T, S, IT>::pop() {
+  if (count == 0) return *tail;
   T result = *tail--;
   if (tail < buffer) {
     tail = buffer + capacity - 1;
@@ -122,48 +136,63 @@ template <typename T, size_t S, typename IT> T canlib_circular_buffer<T, S, IT>:
   return result;
 }
 
-template <typename T, size_t S, typename IT> T inline canlib_circular_buffer<T, S, IT>::first() const { return *head; }
+template <typename T, size_t S, typename IT>
+T inline canlib_circular_buffer<T, S, IT>::first() const {
+  return *head;
+}
 
-template <typename T, size_t S, typename IT> T inline canlib_circular_buffer<T, S, IT>::last() const { return *tail; }
+template <typename T, size_t S, typename IT>
+T inline canlib_circular_buffer<T, S, IT>::last() const {
+  return *tail;
+}
 
-template <typename T, size_t S, typename IT> const T &canlib_circular_buffer<T, S, IT>::start() const {
+template <typename T, size_t S, typename IT>
+const T &canlib_circular_buffer<T, S, IT>::start() const {
   return buffer[1];
 }
 
-template <typename T, size_t S, typename IT> const T &canlib_circular_buffer<T, S, IT>::operator[](IT index) const {
-  if (index >= count)
-    return *tail;
+template <typename T, size_t S, typename IT>
+const T &canlib_circular_buffer<T, S, IT>::operator[](IT index) const {
+  if (index >= count) return *tail;
   return *(buffer + ((head - buffer + index) % capacity));
 }
 
-template <typename T, size_t S, typename IT> IT inline canlib_circular_buffer<T, S, IT>::size() const { return count; }
+template <typename T, size_t S, typename IT>
+IT inline canlib_circular_buffer<T, S, IT>::size() const {
+  return count;
+}
 
-template <typename T, size_t S, typename IT> IT inline canlib_circular_buffer<T, S, IT>::available() const {
+template <typename T, size_t S, typename IT>
+IT inline canlib_circular_buffer<T, S, IT>::available() const {
   return capacity - count;
 }
 
-template <typename T, size_t S, typename IT> bool inline canlib_circular_buffer<T, S, IT>::empty() const {
+template <typename T, size_t S, typename IT>
+bool inline canlib_circular_buffer<T, S, IT>::empty() const {
   return count == 0;
 }
 
-template <typename T, size_t S, typename IT> bool inline canlib_circular_buffer<T, S, IT>::full() const {
+template <typename T, size_t S, typename IT>
+bool inline canlib_circular_buffer<T, S, IT>::full() const {
   return count == capacity;
 }
 
-template <typename T, size_t S, typename IT> void inline canlib_circular_buffer<T, S, IT>::clear() {
+template <typename T, size_t S, typename IT>
+void inline canlib_circular_buffer<T, S, IT>::clear() {
   head = tail = buffer;
   count = 0;
 }
 
-template <typename T, size_t S, typename IT> size_t inline canlib_circular_buffer<T, S, IT>::offset() const {
+template <typename T, size_t S, typename IT>
+size_t inline canlib_circular_buffer<T, S, IT>::offset() const {
   return _offset;
 }
 
-#endif // CANLIB_CIRCULAR_BUFFER
+#endif  // CANLIB_CIRCULAR_BUFFER
 
 #ifndef CANLIB_CIRCULAR_BUFFER_SIZE
 #define CANLIB_CIRCULAR_BUFFER_SIZE 2000
-#endif // CANLIB_CIRCULAR_BUFFER_SIZE
+#endif  // CANLIB_CIRCULAR_BUFFER_SIZE
 
 static std::unordered_map<std::string, uint64_t> timers_gps;
 
@@ -175,17 +204,24 @@ typedef struct gps_proto_pack {
   // UBX
   canlib_circular_buffer<gps_ubx_dop_t, CANLIB_CIRCULAR_BUFFER_SIZE> dop;
   canlib_circular_buffer<gps_ubx_pvt_t, CANLIB_CIRCULAR_BUFFER_SIZE> pvt;
-  canlib_circular_buffer<gps_ubx_hpposecef_t, CANLIB_CIRCULAR_BUFFER_SIZE> hpposecef;
-  canlib_circular_buffer<gps_ubx_hpposllh_t, CANLIB_CIRCULAR_BUFFER_SIZE> hpposllh;
-  canlib_circular_buffer<gps_ubx_relposned_t, CANLIB_CIRCULAR_BUFFER_SIZE> relposned;
+  canlib_circular_buffer<gps_ubx_hpposecef_t, CANLIB_CIRCULAR_BUFFER_SIZE>
+      hpposecef;
+  canlib_circular_buffer<gps_ubx_hpposllh_t, CANLIB_CIRCULAR_BUFFER_SIZE>
+      hpposllh;
+  canlib_circular_buffer<gps_ubx_relposned_t, CANLIB_CIRCULAR_BUFFER_SIZE>
+      relposned;
   canlib_circular_buffer<gps_ubx_velned_t, CANLIB_CIRCULAR_BUFFER_SIZE> velened;
 
   std::unordered_map<std::string, uint64_t> timers;
 } gps_proto_pack;
 
-void gps_proto_serialize_from_match(gps_protocol_and_message &match, gps::GpsPack *proto, gps_parsed_data_t *data,
-                                    uint64_t &timestamp, uint64_t downsample_rate);
-void gps_proto_deserialize(gps::GpsPack *proto, network_enums *net_enums, network_signals *net_signals,
+void gps_proto_serialize_from_match(gps_protocol_and_message &match,
+                                    gps::GpsPack *proto,
+                                    gps_parsed_data_t *data,
+                                    uint64_t &timestamp,
+                                    uint64_t downsample_rate);
+void gps_proto_deserialize(gps::GpsPack *proto, network_enums *net_enums,
+                           network_signals *net_signals,
                            network_strings *net_strings, uint64_t resample_us);
 
 void gps_serialize_gga(gps::GGA *proto, gps_nmea_gga_t *data);
@@ -194,7 +230,9 @@ void gps_serialize_gsa(gps::GSA *proto, gps_nmea_gsa_t *data);
 
 void gps_serialize_dop(gps::NAV_DOP *proto, gps_ubx_dop_t *data);
 void gps_serialize_pvt(gps::NAV_PVT *proto, gps_ubx_pvt_t *data);
-void gps_serialize_hpposecef(gps::NAV_HPPOSECEF *proto, gps_ubx_hpposecef_t *data);
+void gps_serialize_hpposecef(gps::NAV_HPPOSECEF *proto,
+                             gps_ubx_hpposecef_t *data);
 void gps_serialize_hpposllh(gps::NAV_HPPOSLLH *proto, gps_ubx_hpposllh_t *data);
-void gps_serialize_relposned(gps::NAV_RELPOSNED *proto, gps_ubx_relposned_t *data);
+void gps_serialize_relposned(gps::NAV_RELPOSNED *proto,
+                             gps_ubx_relposned_t *data);
 void gps_serialize_velned(gps::NAV_VELNED *proto, gps_ubx_velned_t *data);

@@ -1,87 +1,92 @@
 #include "gps_proto.h"
-#include <functional>
+
 #include <string.h>
 
-void gps_proto_serialize_from_match(gps_protocol_and_message& match, gps::GpsPack* proto, gps_parsed_data_t* data, uint64_t &timestamp, uint64_t downsample_rate){
-    switch (match.protocol)
-    {
-        case GPS_PROTOCOL_TYPE_NMEA:
-    switch (match.message) {
-    case GPS_NMEA_TYPE_GGA:
-      if (downsample_rate &&
-          (1.0e6 / downsample_rate) > (timestamp - timers_gps["gga"]))
-        break;
-      gps_serialize_gga(proto->add_gga(), &data->gga);
-      timers_gps["gga"] = timestamp;
+#include <functional>
+
+void gps_proto_serialize_from_match(gps_protocol_and_message &match,
+                                    gps::GpsPack *proto,
+                                    gps_parsed_data_t *data,
+                                    uint64_t &timestamp,
+                                    uint64_t downsample_rate) {
+  switch (match.protocol) {
+    case GPS_PROTOCOL_TYPE_NMEA:
+      switch (match.message) {
+        case GPS_NMEA_TYPE_GGA:
+          if (downsample_rate &&
+              (1.0e6 / downsample_rate) > (timestamp - timers_gps["gga"]))
+            break;
+          gps_serialize_gga(proto->add_gga(), &data->gga);
+          timers_gps["gga"] = timestamp;
+          break;
+        case GPS_NMEA_TYPE_VTG:
+          if (downsample_rate &&
+              (1.0e6 / downsample_rate) > (timestamp - timers_gps["vtg"]))
+            break;
+          gps_serialize_vtg(proto->add_vtg(), &data->vtg);
+          timers_gps["vtg"] = timestamp;
+          break;
+        case GPS_NMEA_TYPE_GSA:
+          if (downsample_rate &&
+              (1.0e6 / downsample_rate) > (timestamp - timers_gps["gsa"]))
+            break;
+          gps_serialize_gsa(proto->add_gsa(), &data->gsa);
+          timers_gps["gsa"] = timestamp;
+          break;
+        default:
+          break;
+      }
       break;
-    case GPS_NMEA_TYPE_VTG:
-      if (downsample_rate &&
-          (1.0e6 / downsample_rate) > (timestamp - timers_gps["vtg"]))
-        break;
-      gps_serialize_vtg(proto->add_vtg(), &data->vtg);
-      timers_gps["vtg"] = timestamp;
-      break;
-    case GPS_NMEA_TYPE_GSA:
-      if (downsample_rate &&
-          (1.0e6 / downsample_rate) > (timestamp - timers_gps["gsa"]))
-        break;
-      gps_serialize_gsa(proto->add_gsa(), &data->gsa);
-      timers_gps["gsa"] = timestamp;
+    case GPS_PROTOCOL_TYPE_UBX:
+      switch (match.message) {
+        case GPS_UBX_TYPE_NAV_DOP:
+          if (downsample_rate &&
+              (1.0e6 / downsample_rate) > (timestamp - timers_gps["dop"]))
+            break;
+          gps_serialize_dop(proto->add_dop(), &data->dop);
+          timers_gps["dop"] = timestamp;
+          break;
+        case GPS_UBX_TYPE_NAV_PVT:
+          if (downsample_rate &&
+              (1.0e6 / downsample_rate) > (timestamp - timers_gps["pvt"]))
+            break;
+          gps_serialize_pvt(proto->add_pvt(), &data->pvt);
+          timers_gps["pvt"] = timestamp;
+          break;
+        case GPS_UBX_TYPE_NAV_HPPOSECEF:
+          if (downsample_rate &&
+              (1.0e6 / downsample_rate) > (timestamp - timers_gps["hpposecef"]))
+            break;
+          gps_serialize_hpposecef(proto->add_hpposecef(), &data->hpposecef);
+          timers_gps["hpposecef"] = timestamp;
+          break;
+        case GPS_UBX_TYPE_NAV_HPPOSLLH:
+          if (downsample_rate &&
+              (1.0e6 / downsample_rate) > (timestamp - timers_gps["hpposllh"]))
+            break;
+          gps_serialize_hpposllh(proto->add_hpposllh(), &data->hpposllh);
+          timers_gps["hpposllh"] = timestamp;
+          break;
+        case GPS_UBX_TYPE_NAV_RELPOSNED:
+          if (downsample_rate &&
+              (1.0e6 / downsample_rate) > (timestamp - timers_gps["relposned"]))
+            break;
+          gps_serialize_relposned(proto->add_relposned(), &data->relposned);
+          timers_gps["relposned"] = timestamp;
+          break;
+        case GPS_UBX_TYPE_NAV_VELNED:
+          if (downsample_rate &&
+              (1.0e6 / downsample_rate) > (timestamp - timers_gps["velned"]))
+            break;
+          gps_serialize_velned(proto->add_velned(), &data->velned);
+          timers_gps["velned"] = timestamp;
+          break;
+        default:
+          break;
+      }
       break;
     default:
       break;
-    }
-    break;
-  case GPS_PROTOCOL_TYPE_UBX:
-    switch (match.message) {
-    case GPS_UBX_TYPE_NAV_DOP:
-      if (downsample_rate &&
-          (1.0e6 / downsample_rate) > (timestamp - timers_gps["dop"]))
-        break;
-      gps_serialize_dop(proto->add_dop(), &data->dop);
-      timers_gps["dop"] = timestamp;
-      break;
-    case GPS_UBX_TYPE_NAV_PVT:
-      if (downsample_rate &&
-          (1.0e6 / downsample_rate) > (timestamp - timers_gps["pvt"]))
-        break;
-      gps_serialize_pvt(proto->add_pvt(), &data->pvt);
-      timers_gps["pvt"] = timestamp;
-      break;
-    case GPS_UBX_TYPE_NAV_HPPOSECEF:
-      if (downsample_rate &&
-          (1.0e6 / downsample_rate) > (timestamp - timers_gps["hpposecef"]))
-        break;
-      gps_serialize_hpposecef(proto->add_hpposecef(), &data->hpposecef);
-      timers_gps["hpposecef"] = timestamp;
-      break;
-    case GPS_UBX_TYPE_NAV_HPPOSLLH:
-      if (downsample_rate &&
-          (1.0e6 / downsample_rate) > (timestamp - timers_gps["hpposllh"]))
-        break;
-      gps_serialize_hpposllh(proto->add_hpposllh(), &data->hpposllh);
-      timers_gps["hpposllh"] = timestamp;
-      break;
-    case GPS_UBX_TYPE_NAV_RELPOSNED:
-      if (downsample_rate &&
-          (1.0e6 / downsample_rate) > (timestamp - timers_gps["relposned"]))
-        break;
-      gps_serialize_relposned(proto->add_relposned(), &data->relposned);
-      timers_gps["relposned"] = timestamp;
-      break;
-    case GPS_UBX_TYPE_NAV_VELNED:
-      if (downsample_rate &&
-          (1.0e6 / downsample_rate) > (timestamp - timers_gps["velned"]))
-        break;
-      gps_serialize_velned(proto->add_velned(), &data->velned);
-      timers_gps["velned"] = timestamp;
-      break;
-    default:
-      break;
-    }
-    break;
-  default:
-    break;
   }
 }
 
@@ -244,22 +249,31 @@ void gps_proto_deserialize(gps::GpsPack *proto, network_enums *net_enums,
     (*net_signals)["RELPOSNED"]["_timestamp"].push(
         proto->relposned(i)._inner_timestamp());
     (*net_signals)["RELPOSNED"]["version"].push(proto->relposned(i).version());
-    (*net_signals)["RELPOSNED"]["refStationId"].push(proto->relposned(i).refstationid());
+    (*net_signals)["RELPOSNED"]["refStationId"].push(
+        proto->relposned(i).refstationid());
     (*net_signals)["RELPOSNED"]["iTOW"].push(proto->relposned(i).itow());
     (*net_signals)["RELPOSNED"]["relPosN"].push(proto->relposned(i).relposn());
     (*net_signals)["RELPOSNED"]["relPosE"].push(proto->relposned(i).relpose());
     (*net_signals)["RELPOSNED"]["relPosD"].push(proto->relposned(i).relposd());
-    (*net_signals)["RELPOSNED"]["relPosLength"].push(proto->relposned(i).relposlength());
-    (*net_signals)["RELPOSNED"]["relPosHeading"].push(proto->relposned(i).relposheading());
-    (*net_signals)["RELPOSNED"]["relPosHPN"].push(proto->relposned(i).relposhpn());
-    (*net_signals)["RELPOSNED"]["relPosHPE"].push(proto->relposned(i).relposhpe());
-    (*net_signals)["RELPOSNED"]["relPosHPD"].push(proto->relposned(i).relposhpd());
-    (*net_signals)["RELPOSNED"]["relPosHPLength"].push(proto->relposned(i).relposhplength());
+    (*net_signals)["RELPOSNED"]["relPosLength"].push(
+        proto->relposned(i).relposlength());
+    (*net_signals)["RELPOSNED"]["relPosHeading"].push(
+        proto->relposned(i).relposheading());
+    (*net_signals)["RELPOSNED"]["relPosHPN"].push(
+        proto->relposned(i).relposhpn());
+    (*net_signals)["RELPOSNED"]["relPosHPE"].push(
+        proto->relposned(i).relposhpe());
+    (*net_signals)["RELPOSNED"]["relPosHPD"].push(
+        proto->relposned(i).relposhpd());
+    (*net_signals)["RELPOSNED"]["relPosHPLength"].push(
+        proto->relposned(i).relposhplength());
     (*net_signals)["RELPOSNED"]["accN"].push(proto->relposned(i).accn());
     (*net_signals)["RELPOSNED"]["accE"].push(proto->relposned(i).acce());
     (*net_signals)["RELPOSNED"]["accD"].push(proto->relposned(i).accd());
-    (*net_signals)["RELPOSNED"]["accLength"].push(proto->relposned(i).acclength());
-    (*net_signals)["RELPOSNED"]["accHeading"].push(proto->relposned(i).accheading());
+    (*net_signals)["RELPOSNED"]["accLength"].push(
+        proto->relposned(i).acclength());
+    (*net_signals)["RELPOSNED"]["accHeading"].push(
+        proto->relposned(i).accheading());
     (*net_signals)["RELPOSNED"]["flags    "].push(proto->relposned(i).flags());
   }
   for (int i = 0; i < proto->velned_size(); i++) {
@@ -268,7 +282,8 @@ void gps_proto_deserialize(gps::GpsPack *proto, network_enums *net_enums,
       continue;
     else
       last_timestamp = proto->velned(i)._inner_timestamp();
-    (*net_signals)["VELNED"]["_timestamp"].push(proto->velned(i)._inner_timestamp());
+    (*net_signals)["VELNED"]["_timestamp"].push(
+        proto->velned(i)._inner_timestamp());
     (*net_signals)["VELNED"]["iTOW"].push(proto->velned(i).itow());
     (*net_signals)["VELNED"]["velN"].push(proto->velned(i).veln());
     (*net_signals)["VELNED"]["velE"].push(proto->velned(i).vele());
@@ -278,7 +293,6 @@ void gps_proto_deserialize(gps::GpsPack *proto, network_enums *net_enums,
     (*net_signals)["VELNED"]["heading"].push(proto->velned(i).heading());
     (*net_signals)["VELNED"]["sAcc"].push(proto->velned(i).sacc());
     (*net_signals)["VELNED"]["cAcc"].push(proto->velned(i).cacc());
-
   }
 }
 
