@@ -3,12 +3,12 @@ syntax = "proto3";
 package gps;
 
 message GGA {
-  fixed64 _inner_timestamp = 1;
-  bytes time = 2;
+  uint64 _inner_timestamp = 1;
+  string time = 2;
   double latitude = 3;
-  bytes north_south = 4;
+  string north_south = 4;
   double longitude = 5;
-  bytes east_ovest = 6;
+  string east_ovest = 6;
   uint64 fix = 7;
   uint64 satellites = 8;
   double horizontal_diluition_precision = 9;
@@ -17,22 +17,22 @@ message GGA {
 };
 
 message VTG {
-  fixed64 _inner_timestamp = 1;
+  uint64 _inner_timestamp = 1;
   double course_over_ground_degrees = 2;
   double course_over_ground_degrees_magnetic = 3;
   double speed_kmh = 4;
 };
 
 message GSA {
-  fixed64 _inner_timestamp = 1;
-  bytes mode = 2;
+  uint64 _inner_timestamp = 1;
+  string mode = 2;
   double position_diluition_precision = 3;
   double horizontal_diluition_precision = 4;
   double vertical_diluition_precision = 5;
 };
 
 message NAV_DOP {
-  fixed64 _inner_timestamp = 1;
+  uint64 _inner_timestamp = 1;
   uint64 iTOW = 2;
   double gDOP = 3;
   double pDOP = 4;
@@ -44,7 +44,7 @@ message NAV_DOP {
 };
 
 message NAV_PVT {
-  fixed64 _inner_timestamp = 1;
+  uint64 _inner_timestamp = 1;
   uint32 iTOW = 2;
   uint32 year = 3;
   uint32 month = 4;
@@ -79,39 +79,39 @@ message NAV_PVT {
 };
 
 message NAV_HPPOSECEF {
-  fixed64 _inner_timestamp = 1;
+  uint64 _inner_timestamp = 1;
   uint32 version = 2;
   uint32 iTOW = 3;
   double ecefX = 4;
   double ecefY = 5;
   double ecefZ = 6;
-  sint32 ecefXHp = 7;
-  sint32 ecefYHp = 8;
-  sint32 ecefZHp = 9;
+  int32 ecefXHp = 7;
+  int32 ecefYHp = 8;
+  int32 ecefZHp = 9;
   double pAcc = 10;
 };
 
 message NAV_HPPOSLLH {
-  fixed64 _inner_timestamp = 1;
+  uint64 _inner_timestamp = 1;
   uint32 version = 2;
   uint32 iTOW = 3;
   double lon = 4;
   double lat = 5;
   double height = 6;
   double hMSL = 7;
-  sint32 lonHp = 8;
-  sint32 latHp = 9;
-  sint32 heightHp = 10;
-  sint32 hMSLHp = 11;
+  int32 lonHp = 8;
+  int32 latHp = 9;
+  int32 heightHp = 10;
+  int32 hMSLHp = 11;
   double hAcc = 12;
   double vAcc = 13;
 };
 
 message NAV_RELPOSNED {
-  fixed64 _inner_timestamp = 1;
+  uint64 _inner_timestamp = 1;
   uint32 version = 2;
   uint32 refStationId = 3;
-  fixed64 iTOW = 4;
+  uint64 iTOW = 4;
   double relPosN = 5;
   double relPosE = 6;
   double relPosD = 7;
@@ -126,11 +126,11 @@ message NAV_RELPOSNED {
   double accD = 16;
   double accLength = 17;
   double accHeading = 18;
-  fixed64 flags = 19;
+  uint64 flags = 19;
 };
 
 message NAV_VELNED {
-  fixed64 _inner_timestamp = 1;
+  uint64 _inner_timestamp = 1;
   uint32 iTOW = 2;
   double velN = 3;
   double velE = 4;
