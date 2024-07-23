@@ -13,7 +13,9 @@ typedef struct gps_serial_port {
   char *port;
   int open;
   int fd;
-  uint64_t last_timestamp;
+  uint64_t timestamp;
+  uint64_t first_log_timestamp;
+  uint64_t first_real_timestamp;
   off_t read_offset;
 } gps_serial_port;
 

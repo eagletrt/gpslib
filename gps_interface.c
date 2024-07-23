@@ -26,6 +26,11 @@ static int gps_interface_read(gps_serial_port *port, void *__buf,
   }
   return b_read;
 }
+static uint64_t get_real_timestamp() {
+  struct timeval tv;
+  gettimeofday(&tv, NULL);
+  return tv.tv_sec * 1000000 + tv.tv_usec;
+}
 
 void gps_interface_initialize(gps_serial_port *port) {
   port->port = NULL;
@@ -33,7 +38,8 @@ void gps_interface_initialize(gps_serial_port *port) {
   port->open = 0;
   port->type = -1;
   port->read_offset = 0;
-  port->last_timestamp = 0;
+  port->first_log_timestamp = 0;
+  port->first_real_timestamp = 0;
 }
 
 int gps_get_timestamp(gps_serial_port *port, uint64_t *timestamp) {
@@ -84,7 +90,8 @@ int gps_interface_open_file(gps_serial_port *new_serial_port,
   strncpy(new_serial_port->port, filename, strlen(filename));
   new_serial_port->open = 1;
   new_serial_port->read_offset = 0;
-  new_serial_port->last_timestamp = 0;
+  new_serial_port->first_log_timestamp = 0;
+  new_serial_port->first_real_timestamp = 0;
 
   return 0;
 }
@@ -185,12 +192,21 @@ gps_protocol_type gps_interface_get_line(
   memset(line, 0, GPS_MAX_LINE_SIZE);
 
   if (port->type == LOG_FILE) {
-    uint64_t current;
-    if (gps_get_timestamp(port, &current) != 0) return GPS_PROTOCOL_TYPE_SIZE;
-    if (sleep && port->last_timestamp != 0 && current > port->last_timestamp &&
-        current - port->last_timestamp < 1000000)
-      usleep(current - port->last_timestamp);
-    if (current != 0) port->last_timestamp = current;
+    if (gps_get_timestamp(port, &port->timestamp) != 0)
+      return GPS_PROTOCOL_TYPE_SIZE;
+    if (port->first_log_timestamp == 0 && port->first_real_timestamp == 0) {
+      port->first_log_timestamp = port->timestamp;
+      port->first_real_timestamp = get_real_timestamp();
+    }
+    if (sleep) {
+      if (port->timestamp - port->first_log_timestamp >
+          get_real_timestamp() - port->first_real_timestamp) {
+        usleep(port->timestamp - port->first_log_timestamp -
+               (get_real_timestamp() - port->first_real_timestamp));
+      }
+    }
+  } else {
+    port->timestamp = get_real_timestamp();
   }
 
   while (size < GPS_MAX_LINE_SIZE) {
