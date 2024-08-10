@@ -91,7 +91,7 @@ int gps_interface_open_file(gps_serial_port *new_serial_port,
   new_serial_port->open = 1;
   new_serial_port->read_offset = 0;
   new_serial_port->first_log_timestamp = 0;
-  new_serial_port->first_real_timestamp = 0;
+  new_serial_port->first_real_timestamp = get_real_timestamp();
 
   return 0;
 }
@@ -194,9 +194,8 @@ gps_protocol_type gps_interface_get_line(
   if (port->type == LOG_FILE) {
     if (gps_get_timestamp(port, &port->timestamp) != 0)
       return GPS_PROTOCOL_TYPE_SIZE;
-    if (port->first_log_timestamp == 0 && port->first_real_timestamp == 0) {
+    if (port->first_log_timestamp == 0) {
       port->first_log_timestamp = port->timestamp;
-      port->first_real_timestamp = get_real_timestamp();
     }
     if (sleep) {
       if (port->timestamp - port->first_log_timestamp >
