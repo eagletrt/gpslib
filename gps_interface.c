@@ -1,28 +1,37 @@
 #include "gps_interface.h"
 
+#include <arpa/inet.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <inttypes.h>
+#include <netinet/in.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/socket.h>
 #include <sys/stat.h>
 #include <sys/time.h>
+#include <sys/un.h>
 #include <unistd.h>
 
 #define CLK_A 0x00
 #define CLK_B 0x0A
 
-static int gps_interface_read(gps_serial_port *port, void *__buf,
-                              size_t __nbytes) {
+int gps_interface_read(gps_serial_port *port, void *__buf, size_t __nbytes) {
   int b_read = -1;
-  if (port->type == USB) {
-    b_read = read(port->fd, __buf, __nbytes);
-  } else if (port->type == LOG_FILE) {
-    b_read = pread(port->fd, __buf, __nbytes, port->read_offset);
-    if (b_read > 0) {
-      port->read_offset += b_read;
-    }
+  switch (port->type) {
+    case USB:
+      b_read = read(port->fd, __buf, __nbytes);
+      break;
+    case LOG_FILE:
+      b_read = pread(port->fd, __buf, __nbytes, port->read_offset);
+      if (b_read > 0) {
+        port->read_offset += b_read;
+      }
+      break;
+    case UDP_PORT:
+      b_read = recvfrom(port->fd, __buf, __nbytes, 0, NULL, NULL);
+      break;
   }
   return b_read;
 }
@@ -74,8 +83,8 @@ int gps_get_timestamp(gps_serial_port *port, uint64_t *timestamp) {
   return 0;
 }
 
-int gps_interface_open_file(gps_serial_port *new_serial_port,
-                            const char *filename) {
+int gps_interface_open_log_file(gps_serial_port *new_serial_port,
+                                const char *filename) {
   if (filename == NULL) return -1;
   gps_interface_close(new_serial_port);
 
@@ -96,8 +105,8 @@ int gps_interface_open_file(gps_serial_port *new_serial_port,
   return 0;
 }
 
-int gps_interface_open(gps_serial_port *new_serial_port, const char *port,
-                       speed_t speed) {
+int gps_interface_open_serial_port(gps_serial_port *new_serial_port,
+                                   const char *port, speed_t speed) {
   if (port == NULL) return -1;
 
   new_serial_port->open = 0;
@@ -168,6 +177,43 @@ int gps_interface_open(gps_serial_port *new_serial_port, const char *port,
 
   new_serial_port->open = 1;
 
+  return 0;
+}
+
+int gps_interface_open_udp(gps_serial_port *port, const char *udp_port) {
+  if (!port || !udp_port) return -1;
+
+  port->open = 0;
+  port->type = UDP_PORT;
+  port->fd = socket(AF_INET, SOCK_DGRAM, 0);
+  if (port->fd == -1) {
+    printf("GPS Interface: Error opening fd\n");
+    return -1;
+  }
+
+  port->port = (char *)malloc(strlen(udp_port));
+  strcpy(port->port, udp_port);
+
+  struct sockaddr_in addr;
+  addr.sin_family = AF_INET;
+  addr.sin_port = htons(atoi(udp_port));
+  addr.sin_addr.s_addr = htonl(INADDR_ANY);
+
+  int reuse = 1;
+  // Enable address reuse to allow multiple clients to bind to the same port
+  if (setsockopt(port->fd, SOL_SOCKET, SO_REUSEADDR, (const void *)&reuse,
+                 sizeof(reuse)) < 0) {
+    perror("Setting SO_REUSEADDR failed");
+    close(port->fd);
+    exit(EXIT_FAILURE);
+  }
+
+  if (bind(port->fd, (struct sockaddr *)&addr, sizeof(addr)) == -1) {
+    printf("GPS Interface: Error binding\n");
+    return -1;
+  }
+
+  port->open = 1;
   return 0;
 }
 
