@@ -110,8 +110,8 @@ typedef struct gps_nmea_gsa_t {
   FIELD(21, uint8_t, uint8_t, "%" PRIu8, 1, 0, "", flags)     \
   FIELD(22, uint8_t, uint8_t, "%" PRIu8, 1, 0, "", flags2)    \
   FIELD(23, uint8_t, uint8_t, "%" PRIu8, 1, 0, "", numSV)     \
-  FIELD(24, int32_t, double, "%f", 1e-7, 0, "deg", lon)       \
-  FIELD(28, int32_t, double, "%f", 1e-7, 0, "deg", lat)       \
+  FIELD(24, int32_t, double, "%0.7f", 1e-7, 0, "deg", lon)    \
+  FIELD(28, int32_t, double, "%0.7f", 1e-7, 0, "deg", lat)    \
   FIELD(32, int32_t, double, "%f", 1e-3, 0, "m", height)      \
   FIELD(36, int32_t, double, "%f", 1e-3, 0, "m", hMSL)        \
   FIELD(40, uint32_t, double, "%f", 1e-3, 0, "m", hAcc)       \
@@ -144,12 +144,12 @@ typedef struct gps_nmea_gsa_t {
 #define GPS_UBX_HPPOSLLH_FIELDS                              \
   FIELD(0, uint8_t, uint8_t, "%" PRIu8, 1, 0, "", version)   \
   FIELD(4, uint32_t, uint32_t, "%" PRIu32, 1, 0, "ms", iTOW) \
-  FIELD(8, int32_t, double, "%f", 1e-7, 0, "deg", lon)       \
-  FIELD(12, int32_t, double, "%f", 1e-7, 0, "deg", lat)      \
+  FIELD(8, int32_t, double, "%0.9f", 1e-7, 0, "deg", lon)    \
+  FIELD(12, int32_t, double, "%0.9f", 1e-7, 0, "deg", lat)   \
   FIELD(16, int32_t, double, "%f", 1e-3, 0, "m", height)     \
   FIELD(20, int32_t, double, "%f", 1e-3, 0, "m", hMSL)       \
-  FIELD(24, int8_t, double, "%f", 1e-9, 0, "deg", lonHp)     \
-  FIELD(25, int8_t, double, "%f", 1e-9, 0, "deg", latHp)     \
+  FIELD(24, int8_t, double, "%0.9f", 1e-9, 0, "deg", lonHp)  \
+  FIELD(25, int8_t, double, "%0.9f", 1e-9, 0, "deg", latHp)  \
   FIELD(26, int8_t, double, "%f", 1e-4, 0, "m", heightHp)    \
   FIELD(27, int8_t, double, "%f", 1e-4, 0, "m", hMSLHp)      \
   FIELD(28, uint32_t, double, "%f", 1e-4, 0, "m", hAcc)      \
