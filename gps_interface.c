@@ -208,9 +208,6 @@ int gps_interface_open_udp(gps_serial_port *port, const char *udp_port) {
     exit(EXIT_FAILURE);
   }
 
-  int flags = fcntl(port->fd, F_GETFL, 0);
-  fcntl(port->fd, F_SETFL, flags | O_NONBLOCK);
-
   if (bind(port->fd, (struct sockaddr *)&addr, sizeof(addr)) == -1) {
     printf("GPS Interface: Error binding\n");
     return -1;
