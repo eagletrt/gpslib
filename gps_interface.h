@@ -6,13 +6,16 @@
 
 #include "gps.h"
 
-enum SERIAL_MODE { USB, LOG_FILE, UDP_PORT };
+#include <gps.h>
+
+enum SERIAL_MODE { USB, LOG_FILE, UDP_PORT, GPSD };
 
 typedef struct gps_serial_port {
   enum SERIAL_MODE type;
   char *port;
   int open;
   int fd;
+  struct gps_data_t gpsd;
   uint64_t timestamp;
   uint64_t first_log_timestamp;
   uint64_t first_real_timestamp;
@@ -29,6 +32,9 @@ int gps_interface_open_log_file(gps_serial_port *new_serial_port,
                                 const char *filename);
 int gps_interface_open_udp(gps_serial_port *new_serial_port,
                            const char *ip_and_port);
+
+int gps_interface_open_gpsd(gps_serial_port *new_serial_port, const char *ip);
+
 void gps_interface_close(gps_serial_port *serial_port);
 
 gps_protocol_type gps_interface_get_line(
