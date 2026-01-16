@@ -1,12 +1,18 @@
 #pragma once
 
+#include <pthread.h>
 #include <stdbool.h>
 #include <sys/types.h>
 #include <termios.h>
 
 #include "gps.h"
 
-enum SERIAL_MODE { USB, LOG_FILE, UDP_PORT };
+#define SERVER_PORT "5005"
+#define MAX_CLIENTS 5
+
+enum SERIAL_MODE { USB, LOG_FILE, UDP_PORT, SERVER, CLIENT };
+
+typedef struct gps_server_ctx gps_server_ctx;
 
 typedef struct gps_serial_port {
   enum SERIAL_MODE type;
@@ -17,7 +23,20 @@ typedef struct gps_serial_port {
   uint64_t first_log_timestamp;
   uint64_t first_real_timestamp;
   off_t read_offset;
+  gps_server_ctx *ctx;
 } gps_serial_port;
+
+typedef struct gps_server_ctx {
+  gps_serial_port serial_port;
+  int server_socket_fd;
+
+  int client_sockets[MAX_CLIENTS];
+  int client_count;
+  pthread_mutex_t clients_mutex;
+
+  pthread_t acceptThread;
+
+} gps_server_ctx;
 
 void gps_interface_initialize(gps_serial_port *);
 
@@ -29,6 +48,11 @@ int gps_interface_open_log_file(gps_serial_port *new_serial_port,
                                 const char *filename);
 int gps_interface_open_udp(gps_serial_port *new_serial_port,
                            const char *ip_and_port);
+int gps_interface_open_server(gps_serial_port *new_serial_port,
+                              const char *port, speed_t speed);
+int gps_interface_open_client(gps_serial_port *new_serial_port,
+                              const char *ip_address, const char *tcp_port);
+
 void gps_interface_close(gps_serial_port *serial_port);
 
 gps_protocol_type gps_interface_get_line(
