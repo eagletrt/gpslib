@@ -24,11 +24,20 @@ void broadcast_to_clients(gps_server_ctx *ctx, const char *data, int len) {
   pthread_mutex_lock(&ctx->clients_mutex);
   for (int i = 0; i < ctx->client_count; i++) {
     int sock = ctx->client_sockets[i];
-    if (send(sock, data, len, MSG_NOSIGNAL) < 0) {
-      close(sock);
-      ctx->client_sockets[i] = ctx->client_sockets[ctx->client_count - 1];
-      ctx->client_count--;
-      i--;
+    int send_res = send(sock, data, len, MSG_NOSIGNAL);
+    if (send_res < 0) {
+      ctx->client_fails[i]++;
+      printf("[Server] Client %d send failed (Strike %d/%d)", i,
+             ctx->client_fails[i], MAX_FAILS);
+      if (ctx->client_fails[i] >= MAX_FAILS) {
+        close(sock);
+        ctx->client_sockets[i] = ctx->client_sockets[ctx->client_count - 1];
+        ctx->client_fails[i] = ctx->client_fails[ctx->client_count - 1];
+        ctx->client_count--;
+        i--;
+      }
+    } else {
+      ctx->client_fails[i] = 0;
     }
   }
   pthread_mutex_unlock(&ctx->clients_mutex);
@@ -47,11 +56,12 @@ void *acceptThreadFunc(void *arg) {
 
     if (new_sock < 0) {
       perror("[Server] Accept failed");
-      continue; // Keep trying
+      continue;
     }
 
     pthread_mutex_lock(&ctx->clients_mutex);
     if (ctx->client_count < MAX_CLIENTS) {
+      ctx->client_fails[ctx->client_count] = 0;
       ctx->client_sockets[ctx->client_count++] = new_sock;
       printf("[Server] New Client Connected: %s (Total: %d)\n",
              inet_ntoa(client_addr.sin_addr), ctx->client_count);
@@ -285,7 +295,8 @@ int gps_interface_open_udp(gps_serial_port *port, const char *udp_port) {
 }
 
 int gps_interface_open_server(gps_serial_port *new_serial_port,
-                              const char *physical_port, speed_t speed) {
+                              const char *tcp_port, const char *physical_port,
+                              speed_t speed) {
 
   if (!new_serial_port || !physical_port)
     return -1;
@@ -316,8 +327,7 @@ int gps_interface_open_server(gps_serial_port *new_serial_port,
   }
 
   ctx->server_socket_fd = socket(AF_INET, SOCK_STREAM, 0);
-  new_serial_port->fd =
-      ctx->server_socket_fd; // Store it in the main struct too
+  new_serial_port->fd = ctx->server_socket_fd;
 
   if (ctx->server_socket_fd == -1) {
     perror("GPS Server: Socket creation failed\n");
@@ -340,8 +350,8 @@ int gps_interface_open_server(gps_serial_port *new_serial_port,
 
   struct sockaddr_in addr;
   addr.sin_family = AF_INET;
-  addr.sin_addr.s_addr = INADDR_ANY; // Listen on all interfaces
-  addr.sin_port = htons(atoi(SERVER_PORT));
+  addr.sin_addr.s_addr = INADDR_ANY;
+  addr.sin_port = htons(atoi(tcp_port));
 
   if (bind(ctx->server_socket_fd, (struct sockaddr *)&addr, sizeof(addr)) < 0) {
     perror("GPS Server: Bind failed\n");
@@ -371,7 +381,7 @@ int gps_interface_open_server(gps_serial_port *new_serial_port,
     return -1;
   }
 
-  printf("GPS Server started on port %s reading from %s\n", SERVER_PORT,
+  printf("GPS Server started on port %s reading from %s\n", tcp_port,
          physical_port);
   return 0;
 }

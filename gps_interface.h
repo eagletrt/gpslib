@@ -7,8 +7,8 @@
 
 #include "gps.h"
 
-#define SERVER_PORT "5005"
 #define MAX_CLIENTS 5
+#define MAX_FAILS 10
 
 enum SERIAL_MODE { USB, LOG_FILE, UDP_PORT, SERVER, CLIENT };
 
@@ -31,6 +31,7 @@ typedef struct gps_server_ctx {
   int server_socket_fd;
 
   int client_sockets[MAX_CLIENTS];
+  int client_fails[MAX_CLIENTS];
   int client_count;
   pthread_mutex_t clients_mutex;
 
@@ -49,7 +50,8 @@ int gps_interface_open_log_file(gps_serial_port *new_serial_port,
 int gps_interface_open_udp(gps_serial_port *new_serial_port,
                            const char *ip_and_port);
 int gps_interface_open_server(gps_serial_port *new_serial_port,
-                              const char *port, speed_t speed);
+                              const char *tcp_port, const char *port,
+                              speed_t speed);
 int gps_interface_open_client(gps_serial_port *new_serial_port,
                               const char *ip_address, const char *tcp_port);
 
