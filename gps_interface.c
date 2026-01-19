@@ -531,13 +531,15 @@ gps_protocol_type gps_interface_get_line(
       if (size == 2)
         ubx_message_size += c;
       else if (size == 3)
-        ubx_message_size += c << 8;
+        ubx_message_size += (int)(c) << 8;
 
       line[size] = c;
 
       // check if the size matches the ubx_message_size
-      if (size > 2 && size - 5 == ubx_message_size)
+      if (size > 2 && size - 5 == ubx_message_size) {
+        size++;
         break;
+      }
     }
 
     size++;
@@ -551,18 +553,19 @@ gps_protocol_type gps_interface_get_line(
 
   if (port->type == SERVER && port->ctx != NULL) {
     if (type != GPS_PROTOCOL_TYPE_SIZE) {
-
       char full_msg[GPS_MAX_LINE_SIZE + GPS_MAX_START_SEQUENCE_SIZE];
       int header_len = *start_sequence_size;
-      int payload_len = size - 1; // Exclude \0
+      int body_len = size - 1;
 
       memcpy(full_msg, start_sequence, header_len);
+      memcpy(full_msg + header_len, line, body_len);
 
-      memcpy(full_msg + header_len, line, payload_len);
+      int total_len = header_len + body_len;
 
-      int total_len = header_len + payload_len;
-      if (type == GPS_PROTOCOL_TYPE_NMEA && full_msg[total_len - 1] != '\n') {
-        full_msg[total_len++] = '\n';
+      if (type == GPS_PROTOCOL_TYPE_NMEA) {
+        if (total_len > 0 && full_msg[total_len - 1] != '\n') {
+          full_msg[total_len++] = '\n';
+        }
       }
 
       broadcast_to_clients(port->ctx, full_msg, total_len);
