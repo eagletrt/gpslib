@@ -26,9 +26,16 @@ void broadcast_to_clients(gps_server_ctx *ctx, const char *data, int len) {
     int sock = ctx->client_sockets[i];
     int send_res = send(sock, data, len, MSG_NOSIGNAL);
     if (send_res < 0) {
-      ctx->client_fails[i]++;
-      printf("[Server] Client %d send failed (Strike %d/%d)", i,
-             ctx->client_fails[i], MAX_FAILS);
+      if (errno == EPIPE || errno == ECONNRESET) {
+        printf("[Server] Fatal error (Client %d): %s. Disconnecting "
+               "immediately.\n",
+               i, strerror(errno));
+        ctx->client_fails[i] = MAX_FAILS;
+      } else {
+        ctx->client_fails[i]++;
+        printf("[Server] Client %d send failed (Strike %d/%d)", i,
+               ctx->client_fails[i], MAX_FAILS);
+      }
       if (ctx->client_fails[i] >= MAX_FAILS) {
         close(sock);
         ctx->client_sockets[i] = ctx->client_sockets[ctx->client_count - 1];
