@@ -597,8 +597,8 @@ gps_protocol_type gps_interface_get_line(
         break;
       } else if (c == CLK_A) { // CLK_A termination byte
         previous_clk_a = 1;
+        continue;
       } else if (c == CLK_B && previous_clk_a == 1) { // CLK_B termination byte
-        size -= 2; // because line is not updated with CLK_A and CLK_B
         break;
       } else {
         previous_clk_a = 0;
@@ -633,7 +633,7 @@ gps_protocol_type gps_interface_get_line(
 
   if (port->type == SERVER && port->ctx != NULL) {
     if (type != GPS_PROTOCOL_TYPE_SIZE) {
-      char full_msg[GPS_MAX_LINE_SIZE + GPS_MAX_START_SEQUENCE_SIZE];
+      char full_msg[GPS_MAX_LINE_SIZE + GPS_MAX_START_SEQUENCE_SIZE + 1];
       int header_len = *start_sequence_size;
       int body_len = size - 1;
 
