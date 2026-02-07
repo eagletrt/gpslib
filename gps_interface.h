@@ -1,6 +1,7 @@
 #pragma once
 
 #include <pthread.h>
+#include <signal.h>
 #include <stdbool.h>
 #include <sys/types.h>
 #include <termios.h>
@@ -33,6 +34,7 @@ typedef struct gps_server_ctx {
   int client_sockets[MAX_CLIENTS];
   int client_fails[MAX_CLIENTS];
   int client_count;
+  volatile sig_atomic_t should_exit;
   pthread_mutex_t clients_mutex;
 
   pthread_t acceptThread;

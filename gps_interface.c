@@ -1,10 +1,15 @@
 #include "gps_interface.h"
 
 #include <arpa/inet.h>
+#include <asm-generic/errno-base.h>
+#include <asm-generic/errno.h>
+#include <asm-generic/socket.h>
+#include <bits/types/struct_timeval.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <inttypes.h>
 #include <netinet/in.h>
+#include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -16,6 +21,8 @@
 
 #define CLK_A 0x00
 #define CLK_B 0x0A
+
+static gps_server_ctx *server_ctx = NULL;
 
 void broadcast_to_clients(gps_server_ctx *ctx, const char *data, int len) {
   if (!ctx || ctx->client_count == 0)
@@ -50,6 +57,14 @@ void broadcast_to_clients(gps_server_ctx *ctx, const char *data, int len) {
   pthread_mutex_unlock(&ctx->clients_mutex);
 }
 
+void shutdown_signal_handler(int signo) {
+  printf("[Server] Shutdown signal received.\n");
+  if (server_ctx && server_ctx->server_socket_fd >= 0) {
+    server_ctx->should_exit = 1;
+    shutdown(server_ctx->server_socket_fd, SHUT_RDWR);
+  }
+}
+
 void *acceptThreadFunc(void *arg) {
   gps_server_ctx *ctx = (gps_server_ctx *)arg;
   struct sockaddr_in client_addr;
@@ -57,11 +72,17 @@ void *acceptThreadFunc(void *arg) {
 
   printf("[Server] Accept Thread Started.\n");
 
-  while (1) {
+  while (!ctx->should_exit) {
     int new_sock = accept(ctx->server_socket_fd,
                           (struct sockaddr *)&client_addr, &addr_len);
 
     if (new_sock < 0) {
+      if (errno == EWOULDBLOCK || errno == EAGAIN) {
+        continue;
+      }
+      if (ctx->should_exit) {
+        break;
+      }
       perror("[Server] Accept failed");
       continue;
     }
@@ -79,6 +100,7 @@ void *acceptThreadFunc(void *arg) {
     }
     pthread_mutex_unlock(&ctx->clients_mutex);
   }
+  printf("[Server] Accept Thread Exiting. \n");
   return NULL;
 }
 
@@ -318,6 +340,7 @@ int gps_interface_open_server(gps_serial_port *new_serial_port,
 
   gps_server_ctx *ctx = new_serial_port->ctx;
   ctx->client_count = 0;
+  ctx->should_exit = 0;
 
   if (pthread_mutex_init(&ctx->clients_mutex, NULL) != 0) {
     free(ctx);
@@ -355,6 +378,14 @@ int gps_interface_open_server(gps_serial_port *new_serial_port,
     return -1;
   }
 
+  struct timeval timeout;
+  timeout.tv_sec = 1;
+  timeout.tv_usec = 0;
+  if (setsockopt(ctx->server_socket_fd, SOL_SOCKET, SO_RCVTIMEO, &timeout,
+                 sizeof(timeout)) < 0) {
+    perror("[Server] setsocketopt timeout failed");
+  }
+
   struct sockaddr_in addr;
   addr.sin_family = AF_INET;
   addr.sin_addr.s_addr = INADDR_ANY;
@@ -378,6 +409,12 @@ int gps_interface_open_server(gps_serial_port *new_serial_port,
     return -1;
   }
 
+  struct sigaction sa;
+  sa.sa_handler = shutdown_signal_handler;
+  sigemptyset(&sa.sa_mask);
+  sa.sa_flags = 0;
+  sigaction(SIGUSR1, &sa, NULL);
+
   if (pthread_create(&ctx->acceptThread, NULL, acceptThreadFunc, (void *)ctx) !=
       0) {
     perror("GPS Server: Thread creation failed\n");
@@ -387,6 +424,8 @@ int gps_interface_open_server(gps_serial_port *new_serial_port,
     free(ctx);
     return -1;
   }
+
+  server_ctx = new_serial_port->ctx;
 
   printf("GPS Server started on port %s reading from %s\n", tcp_port,
          physical_port);
@@ -440,8 +479,32 @@ int gps_interface_open_client(gps_serial_port *new_serial_port,
 void gps_interface_close(gps_serial_port *serial_port) {
   if (serial_port->open == 0)
     return;
-  close(serial_port->fd);
+
   serial_port->open = 0;
+
+  if (serial_port->type == SERVER) {
+    gps_server_ctx *ctx = serial_port->ctx;
+    ctx->should_exit = 1;
+    pthread_kill(ctx->acceptThread, SIGUSR1);
+    pthread_join(ctx->acceptThread, NULL);
+
+    pthread_mutex_lock(&ctx->clients_mutex);
+    for (int i = 0; i < ctx->client_count; i++) {
+      close(ctx->client_sockets[i]);
+    }
+    pthread_mutex_unlock(&ctx->clients_mutex);
+    pthread_mutex_destroy(&ctx->clients_mutex);
+    gps_interface_close(&(ctx->serial_port));
+    if (server_ctx == ctx)
+      server_ctx = NULL;
+    free(ctx);
+  }
+
+  close(serial_port->fd);
+  if (serial_port->port) {
+    free(serial_port->port);
+    serial_port->port = NULL;
+  }
 }
 
 gps_protocol_type gps_interface_get_line(
