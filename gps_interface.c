@@ -594,6 +594,8 @@ gps_protocol_type gps_interface_get_line(
 
     if (type == GPS_PROTOCOL_TYPE_NMEA) {
       if (c == '\n') {
+        line[size] = c;
+        size++;
         break;
       } else if (c == CLK_A) { // CLK_A termination byte
         previous_clk_a = 1;
