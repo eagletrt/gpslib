@@ -369,7 +369,7 @@ int gps_interface_open_server(gps_serial_port *new_serial_port,
     return -1;
   }
 
-  if (listen(ctx->server_socket_fd, 5) < 0) {
+  if (listen(ctx->server_socket_fd, MAX_CLIENTS) < 0) {
     perror("GPS Server: Listen failed\n");
     close(ctx->server_socket_fd);
     gps_interface_close(&ctx->serial_port);
