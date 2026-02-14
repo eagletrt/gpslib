@@ -58,6 +58,7 @@ int gps_interface_open_client(gps_serial_port *new_serial_port,
                               const char *ip_address, const char *tcp_port);
 
 void gps_interface_close(gps_serial_port *serial_port);
+void gps_interface_shutdown_server(gps_serial_port *serial_port);
 
 gps_protocol_type gps_interface_get_line(
     gps_serial_port *port,
