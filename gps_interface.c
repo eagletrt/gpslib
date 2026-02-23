@@ -314,7 +314,7 @@ int gps_interface_open_server(gps_serial_port *new_serial_port,
                               const char *tcp_port, const char *physical_port,
                               speed_t speed) {
 
-  if (!new_serial_port || !physical_port)
+  if (!new_serial_port || !tcp_port || !physical_port)
     return -1;
 
   gps_interface_initialize(new_serial_port);
@@ -631,10 +631,8 @@ gps_protocol_type gps_interface_get_line(
       int total_len = header_len + body_len;
 
       if (type == GPS_PROTOCOL_TYPE_NMEA) {
-        if (total_len > 0 && full_msg[total_len - 1] != '\n') {
-          full_msg[total_len++] = CLK_A;
-          full_msg[total_len++] = CLK_B;
-        }
+        full_msg[total_len++] = CLK_A;
+        full_msg[total_len++] = CLK_B;
       }
       broadcast_to_clients(port->ctx, full_msg, total_len);
     }
