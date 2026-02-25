@@ -3,7 +3,7 @@
 #include <inttypes.h>
 #include <stdio.h>
 
-#define GPS_MAX_LINE_SIZE 150
+#define GPS_MAX_LINE_SIZE 300
 #define GPS_MAX_START_SEQUENCE_SIZE 3 + 1
 #define GPS_UBX_SYNC_FIRST_BYTE (0xb5)
 #define GPS_UBX_SYNC_SECOND_BYTE (0x62)
