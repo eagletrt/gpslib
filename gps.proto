@@ -142,6 +142,14 @@ message NAV_VELNED {
   double cAcc = 10;
 }
 
+message HEADING {
+  uint64 _inner_timestamp = 1;
+  uint32 iTOW = 2;
+  double heading = 3;
+  double heading_stddev = 4;
+  double baseline = 5;
+}
+
 message GpsPack {
   repeated GGA gga = 1;
   repeated VTG vtg = 2;
@@ -153,4 +161,8 @@ message GpsPack {
   repeated NAV_HPPOSLLH hpposllh = 7;
   repeated NAV_RELPOSNED relposned = 8;
   repeated NAV_VELNED velned = 9;
+  
+  repeated HEADING heading = 10;
+
+  string antenna_name = 11;
 }

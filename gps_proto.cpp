@@ -1,6 +1,7 @@
 #include "gps_proto.h"
 
 #include <string.h>
+#include <atomic>
 
 #include <functional>
 
@@ -93,206 +94,281 @@ void gps_proto_serialize_from_match(gps_protocol_and_message &match,
 void gps_proto_deserialize(gps::GpsPack *proto, network_enums *net_enums,
                            network_signals *net_signals,
                            network_strings *net_strings, uint64_t resample_us) {
+  std::string antenna_name = proto->antenna_name();
+
+  // static to avoid reinitialization on every call
+  static std::atomic<uint32_t> unnamed_counter{0};
+
+  // fallback in case antenna name is not set
+  // we want to avoid all messages being grouped together in the same key
+  if (antenna_name.empty()) {
+    antenna_name =
+        std::string("GPS_") + std::to_string(unnamed_counter.fetch_add(1) + 1);
+  }
+
+  // map to keep track of last timestamps for each message type to implement
+  // downsampling
+  static std::unordered_map<std::string, uint64_t> last_timestamps;
+
+  // lambda to check if a sample should be skipped based on the resample_us
+  // parameter
+  auto shouldSkipSample = [&](const char *message_key,
+                              uint64_t sample_timestamp) -> bool {
+    if (resample_us == 0) {
+      return false;
+    }
+    const std::string key = antenna_name + "_" + message_key;
+    uint64_t &last_timestamp = last_timestamps[key];
+    if (last_timestamp != 0 && sample_timestamp >= last_timestamp &&
+        (sample_timestamp - last_timestamp) < resample_us) {
+      return true;
+    }
+    last_timestamp = sample_timestamp;
+    return false;
+  };
+
   for (int i = 0; i < proto->gga_size(); i++) {
-    static uint64_t last_timestamp = 0;
-    if (proto->gga(i)._inner_timestamp() - last_timestamp < resample_us)
-      continue;
-    else
-      last_timestamp = proto->gga(i)._inner_timestamp();
-    (*net_signals)["GGA"]["_timestamp"].push(proto->gga(i)._inner_timestamp());
-    (*net_strings)["GGA"]["time"].push(
+    if (shouldSkipSample("GGA", proto->gga(i)._inner_timestamp())) continue;
+    (*net_signals)[antenna_name + "_GGA"]["_timestamp"].push(
+        proto->gga(i)._inner_timestamp());
+    (*net_strings)[antenna_name + "_GGA"]["time"].push(
         std::string(proto->gga(i).time().c_str(), 9));
-    (*net_signals)["GGA"]["latitude"].push(proto->gga(i).latitude());
-    (*net_strings)["GGA"]["north_south"].push(proto->gga(i).north_south());
-    (*net_signals)["GGA"]["longitude"].push(proto->gga(i).longitude());
-    (*net_strings)["GGA"]["east_ovest"].push(proto->gga(i).east_ovest());
-    (*net_signals)["GGA"]["fix"].push(proto->gga(i).fix());
-    (*net_signals)["GGA"]["satellites"].push(proto->gga(i).satellites());
-    (*net_signals)["GGA"]["horizontal_diluition_precision"].push(
-        proto->gga(i).horizontal_diluition_precision());
-    (*net_enums)["GGA"]["fix_state"].push(proto->gga(i).fix());
-    (*net_strings)["GGA"]["fix_state"].push(
+    (*net_signals)[antenna_name + "_GGA"]["latitude"].push(
+        proto->gga(i).latitude());
+    (*net_strings)[antenna_name + "_GGA"]["north_south"].push(
+        proto->gga(i).north_south());
+    (*net_signals)[antenna_name + "_GGA"]["longitude"].push(
+        proto->gga(i).longitude());
+    (*net_strings)[antenna_name + "_GGA"]["east_ovest"].push(
+        proto->gga(i).east_ovest());
+    (*net_signals)[antenna_name + "_GGA"]["fix"].push(proto->gga(i).fix());
+    (*net_signals)[antenna_name + "_GGA"]["satellites"].push(
+        proto->gga(i).satellites());
+    (*net_signals)[antenna_name + "_GGA"]["horizontal_diluition_precision"]
+        .push(proto->gga(i).horizontal_diluition_precision());
+    (*net_enums)[antenna_name + "_GGA"]["fix_state"].push(proto->gga(i).fix());
+    (*net_strings)[antenna_name + "_GGA"]["fix_state"].push(
         gps_fix_state_string(proto->gga(i).fix()));
-    (*net_signals)["GGA"]["altitude"].push(proto->gga(i).altitude());
-    (*net_signals)["GGA"]["age_of_correction"].push(
+    (*net_signals)[antenna_name + "_GGA"]["altitude"].push(
+        proto->gga(i).altitude());
+    (*net_signals)[antenna_name + "_GGA"]["age_of_correction"].push(
         proto->gga(i).age_of_correction());
   }
   for (int i = 0; i < proto->vtg_size(); i++) {
-    static uint64_t last_timestamp = 0;
-    if (proto->vtg(i)._inner_timestamp() - last_timestamp < resample_us)
-      continue;
-    else
-      last_timestamp = proto->vtg(i)._inner_timestamp();
-    (*net_signals)["VTG"]["_timestamp"].push(proto->vtg(i)._inner_timestamp());
-    (*net_signals)["VTG"]["course_over_ground_degrees"].push(
+    if (shouldSkipSample("VTG", proto->vtg(i)._inner_timestamp())) continue;
+    (*net_signals)[antenna_name + "_VTG"]["_timestamp"].push(
+        proto->vtg(i)._inner_timestamp());
+    (*net_signals)[antenna_name + "_VTG"]["course_over_ground_degrees"].push(
         proto->vtg(i).course_over_ground_degrees());
-    (*net_signals)["VTG"]["course_over_ground_degrees_magnetic"].push(
-        proto->vtg(i).course_over_ground_degrees_magnetic());
-    (*net_signals)["VTG"]["speed_kmh"].push(proto->vtg(i).speed_kmh());
+    (*net_signals)[antenna_name + "_VTG"]["course_over_ground_degrees_magnetic"]
+        .push(proto->vtg(i).course_over_ground_degrees_magnetic());
+    (*net_signals)[antenna_name + "_VTG"]["speed_kmh"].push(
+        proto->vtg(i).speed_kmh());
   }
   for (int i = 0; i < proto->gsa_size(); i++) {
-    static uint64_t last_timestamp = 0;
-    if (proto->gsa(i)._inner_timestamp() - last_timestamp < resample_us)
-      continue;
-    else
-      last_timestamp = proto->gsa(i)._inner_timestamp();
-    (*net_signals)["GSA"]["_timestamp"].push(proto->gsa(i)._inner_timestamp());
-    (*net_strings)["GSA"]["mode"].push(proto->gsa(i).mode());
-    (*net_signals)["GSA"]["position_diluition_precision"].push(
+    if (shouldSkipSample("GSA", proto->gsa(i)._inner_timestamp())) continue;
+    (*net_signals)[antenna_name + "_GSA"]["_timestamp"].push(
+        proto->gsa(i)._inner_timestamp());
+    (*net_strings)[antenna_name + "_GSA"]["mode"].push(proto->gsa(i).mode());
+    (*net_signals)[antenna_name + "_GSA"]["position_diluition_precision"].push(
         proto->gsa(i).position_diluition_precision());
-    (*net_signals)["GSA"]["horizontal_diluition_precision"].push(
-        proto->gsa(i).horizontal_diluition_precision());
-    (*net_signals)["GSA"]["vertical_diluition_precision"].push(
+    (*net_signals)[antenna_name + "_GSA"]["horizontal_diluition_precision"]
+        .push(proto->gsa(i).horizontal_diluition_precision());
+    (*net_signals)[antenna_name + "_GSA"]["vertical_diluition_precision"].push(
         proto->gsa(i).vertical_diluition_precision());
   }
 
   for (int i = 0; i < proto->dop_size(); i++) {
-    static uint64_t last_timestamp = 0;
-    if (proto->dop(i)._inner_timestamp() - last_timestamp < resample_us)
-      continue;
-    else
-      last_timestamp = proto->dop(i)._inner_timestamp();
-    (*net_signals)["DOP"]["_timestamp"].push(proto->dop(i)._inner_timestamp());
-    (*net_signals)["DOP"]["iTOW"].push(proto->dop(i).itow());
-    (*net_signals)["DOP"]["gDOP"].push(proto->dop(i).gdop());
-    (*net_signals)["DOP"]["pDOP"].push(proto->dop(i).pdop());
-    (*net_signals)["DOP"]["tDOP"].push(proto->dop(i).tdop());
-    (*net_signals)["DOP"]["vDOP"].push(proto->dop(i).vdop());
-    (*net_signals)["DOP"]["hDOP"].push(proto->dop(i).hdop());
-    (*net_signals)["DOP"]["nDOP"].push(proto->dop(i).ndop());
-    (*net_signals)["DOP"]["eDOP"].push(proto->dop(i).edop());
+    if (shouldSkipSample("DOP", proto->dop(i)._inner_timestamp())) continue;
+    (*net_signals)[antenna_name + "_DOP"]["_timestamp"].push(
+        proto->dop(i)._inner_timestamp());
+    (*net_signals)[antenna_name + "_DOP"]["iTOW"].push(proto->dop(i).itow());
+    (*net_signals)[antenna_name + "_DOP"]["gDOP"].push(proto->dop(i).gdop());
+    (*net_signals)[antenna_name + "_DOP"]["pDOP"].push(proto->dop(i).pdop());
+    (*net_signals)[antenna_name + "_DOP"]["tDOP"].push(proto->dop(i).tdop());
+    (*net_signals)[antenna_name + "_DOP"]["vDOP"].push(proto->dop(i).vdop());
+    (*net_signals)[antenna_name + "_DOP"]["hDOP"].push(proto->dop(i).hdop());
+    (*net_signals)[antenna_name + "_DOP"]["nDOP"].push(proto->dop(i).ndop());
+    (*net_signals)[antenna_name + "_DOP"]["eDOP"].push(proto->dop(i).edop());
   }
   for (int i = 0; i < proto->pvt_size(); i++) {
-    static uint64_t last_timestamp = 0;
-    if (proto->pvt(i)._inner_timestamp() - last_timestamp < resample_us)
-      continue;
-    else
-      last_timestamp = proto->pvt(i)._inner_timestamp();
-    (*net_signals)["PVT"]["_timestamp"].push(proto->pvt(i)._inner_timestamp());
-    (*net_signals)["PVT"]["iTOW"].push(proto->pvt(i).itow());
-    (*net_signals)["PVT"]["year"].push(proto->pvt(i).year());
-    (*net_signals)["PVT"]["month"].push(proto->pvt(i).month());
-    (*net_signals)["PVT"]["day"].push(proto->pvt(i).day());
-    (*net_signals)["PVT"]["hour"].push(proto->pvt(i).hour());
-    (*net_signals)["PVT"]["min"].push(proto->pvt(i).min());
-    (*net_signals)["PVT"]["sec"].push(proto->pvt(i).sec());
-    (*net_signals)["PVT"]["valid"].push(proto->pvt(i).valid());
-    (*net_signals)["PVT"]["tAcc"].push(proto->pvt(i).tacc());
-    (*net_signals)["PVT"]["nano"].push(proto->pvt(i).nano());
-    (*net_signals)["PVT"]["fixType"].push(proto->pvt(i).fixtype());
-    (*net_signals)["PVT"]["flags"].push(proto->pvt(i).flags());
-    (*net_signals)["PVT"]["flags2"].push(proto->pvt(i).flags2());
-    (*net_signals)["PVT"]["numSV"].push(proto->pvt(i).numsv());
-    (*net_signals)["PVT"]["lon"].push(proto->pvt(i).lon());
-    (*net_signals)["PVT"]["lat"].push(proto->pvt(i).lat());
-    (*net_signals)["PVT"]["height"].push(proto->pvt(i).height());
-    (*net_signals)["PVT"]["hMSL"].push(proto->pvt(i).hmsl());
-    (*net_signals)["PVT"]["hAcc"].push(proto->pvt(i).hacc());
-    (*net_signals)["PVT"]["vAcc"].push(proto->pvt(i).vacc());
-    (*net_signals)["PVT"]["velN"].push(proto->pvt(i).veln());
-    (*net_signals)["PVT"]["velE"].push(proto->pvt(i).vele());
-    (*net_signals)["PVT"]["velD"].push(proto->pvt(i).veld());
-    (*net_signals)["PVT"]["gSpeed"].push(proto->pvt(i).gspeed());
-    (*net_signals)["PVT"]["headMot"].push(proto->pvt(i).headmot());
-    (*net_signals)["PVT"]["sAcc"].push(proto->pvt(i).sacc());
-    (*net_signals)["PVT"]["headAcc"].push(proto->pvt(i).headacc());
-    (*net_signals)["PVT"]["pDOP"].push(proto->pvt(i).pdop());
-    (*net_signals)["PVT"]["headVeh"].push(proto->pvt(i).headveh());
-    (*net_signals)["PVT"]["magDec"].push(proto->pvt(i).magdec());
-    (*net_signals)["PVT"]["magAcc"].push(proto->pvt(i).magacc());
+    if (shouldSkipSample("PVT", proto->pvt(i)._inner_timestamp())) continue;
+    (*net_signals)[antenna_name + "_PVT"]["_timestamp"].push(
+        proto->pvt(i)._inner_timestamp());
+    (*net_signals)[antenna_name + "_PVT"]["iTOW"].push(proto->pvt(i).itow());
+    (*net_signals)[antenna_name + "_PVT"]["year"].push(proto->pvt(i).year());
+    (*net_signals)[antenna_name + "_PVT"]["month"].push(proto->pvt(i).month());
+    (*net_signals)[antenna_name + "_PVT"]["day"].push(proto->pvt(i).day());
+    (*net_signals)[antenna_name + "_PVT"]["hour"].push(proto->pvt(i).hour());
+    (*net_signals)[antenna_name + "_PVT"]["min"].push(proto->pvt(i).min());
+    (*net_signals)[antenna_name + "_PVT"]["sec"].push(proto->pvt(i).sec());
+    (*net_signals)[antenna_name + "_PVT"]["valid"].push(proto->pvt(i).valid());
+    (*net_signals)[antenna_name + "_PVT"]["tAcc"].push(proto->pvt(i).tacc());
+    (*net_signals)[antenna_name + "_PVT"]["nano"].push(proto->pvt(i).nano());
+    (*net_signals)[antenna_name + "_PVT"]["fixType"].push(
+        proto->pvt(i).fixtype());
+    (*net_signals)[antenna_name + "_PVT"]["flags"].push(proto->pvt(i).flags());
+    (*net_signals)[antenna_name + "_PVT"]["flags2"].push(
+        proto->pvt(i).flags2());
+    (*net_signals)[antenna_name + "_PVT"]["numSV"].push(proto->pvt(i).numsv());
+    (*net_signals)[antenna_name + "_PVT"]["lon"].push(proto->pvt(i).lon());
+    (*net_signals)[antenna_name + "_PVT"]["lat"].push(proto->pvt(i).lat());
+    (*net_signals)[antenna_name + "_PVT"]["height"].push(
+        proto->pvt(i).height());
+    (*net_signals)[antenna_name + "_PVT"]["hMSL"].push(proto->pvt(i).hmsl());
+    (*net_signals)[antenna_name + "_PVT"]["hAcc"].push(proto->pvt(i).hacc());
+    (*net_signals)[antenna_name + "_PVT"]["vAcc"].push(proto->pvt(i).vacc());
+    (*net_signals)[antenna_name + "_PVT"]["velN"].push(proto->pvt(i).veln());
+    (*net_signals)[antenna_name + "_PVT"]["velE"].push(proto->pvt(i).vele());
+    (*net_signals)[antenna_name + "_PVT"]["velD"].push(proto->pvt(i).veld());
+    (*net_signals)[antenna_name + "_PVT"]["gSpeed"].push(
+        proto->pvt(i).gspeed());
+    (*net_signals)[antenna_name + "_PVT"]["headMot"].push(
+        proto->pvt(i).headmot());
+    (*net_signals)[antenna_name + "_PVT"]["sAcc"].push(proto->pvt(i).sacc());
+    (*net_signals)[antenna_name + "_PVT"]["headAcc"].push(
+        proto->pvt(i).headacc());
+    (*net_signals)[antenna_name + "_PVT"]["pDOP"].push(proto->pvt(i).pdop());
+    (*net_signals)[antenna_name + "_PVT"]["headVeh"].push(
+        proto->pvt(i).headveh());
+    (*net_signals)[antenna_name + "_PVT"]["magDec"].push(
+        proto->pvt(i).magdec());
+    (*net_signals)[antenna_name + "_PVT"]["magAcc"].push(
+        proto->pvt(i).magacc());
   }
   for (int i = 0; i < proto->hpposecef_size(); i++) {
-    static uint64_t last_timestamp = 0;
-    if (proto->hpposecef(i)._inner_timestamp() - last_timestamp < resample_us)
+    if (shouldSkipSample("HPPOSECEF", proto->hpposecef(i)._inner_timestamp()))
       continue;
-    else
-      last_timestamp = proto->hpposecef(i)._inner_timestamp();
-    (*net_signals)["HPPOSECEF"]["_timestamp"].push(
+    (*net_signals)[antenna_name + "_HPPOSECEF"]["_timestamp"].push(
         proto->hpposecef(i)._inner_timestamp());
-    (*net_signals)["HPPOSECEF"]["version"].push(proto->hpposecef(i).version());
-    (*net_signals)["HPPOSECEF"]["iTOW"].push(proto->hpposecef(i).itow());
-    (*net_signals)["HPPOSECEF"]["ecefX"].push(proto->hpposecef(i).ecefx());
-    (*net_signals)["HPPOSECEF"]["ecefY"].push(proto->hpposecef(i).ecefy());
-    (*net_signals)["HPPOSECEF"]["ecefZ"].push(proto->hpposecef(i).ecefz());
-    (*net_signals)["HPPOSECEF"]["ecefXHp"].push(proto->hpposecef(i).ecefxhp());
-    (*net_signals)["HPPOSECEF"]["ecefYHp"].push(proto->hpposecef(i).ecefyhp());
-    (*net_signals)["HPPOSECEF"]["ecefZHp"].push(proto->hpposecef(i).ecefzhp());
-    (*net_signals)["HPPOSECEF"]["pAcc"].push(proto->hpposecef(i).pacc());
+    (*net_signals)[antenna_name + "_HPPOSECEF"]["version"].push(
+        proto->hpposecef(i).version());
+    (*net_signals)[antenna_name + "_HPPOSECEF"]["iTOW"].push(
+        proto->hpposecef(i).itow());
+    (*net_signals)[antenna_name + "_HPPOSECEF"]["ecefX"].push(
+        proto->hpposecef(i).ecefx());
+    (*net_signals)[antenna_name + "_HPPOSECEF"]["ecefY"].push(
+        proto->hpposecef(i).ecefy());
+    (*net_signals)[antenna_name + "_HPPOSECEF"]["ecefZ"].push(
+        proto->hpposecef(i).ecefz());
+    (*net_signals)[antenna_name + "_HPPOSECEF"]["ecefXHp"].push(
+        proto->hpposecef(i).ecefxhp());
+    (*net_signals)[antenna_name + "_HPPOSECEF"]["ecefYHp"].push(
+        proto->hpposecef(i).ecefyhp());
+    (*net_signals)[antenna_name + "_HPPOSECEF"]["ecefZHp"].push(
+        proto->hpposecef(i).ecefzhp());
+    (*net_signals)[antenna_name + "_HPPOSECEF"]["pAcc"].push(
+        proto->hpposecef(i).pacc());
   }
   for (int i = 0; i < proto->hpposllh_size(); i++) {
-    static uint64_t last_timestamp = 0;
-    if (proto->hpposllh(i)._inner_timestamp() - last_timestamp < resample_us)
+    if (shouldSkipSample("HPPOSLLH", proto->hpposllh(i)._inner_timestamp()))
       continue;
-    else
-      last_timestamp = proto->hpposllh(i)._inner_timestamp();
-    (*net_signals)["HPPOSLLH"]["_timestamp"].push(
+    (*net_signals)[antenna_name + "_HPPOSLLH"]["_timestamp"].push(
         proto->hpposllh(i)._inner_timestamp());
-    (*net_signals)["HPPOSLLH"]["version"].push(proto->hpposllh(i).version());
-    (*net_signals)["HPPOSLLH"]["iTOW"].push(proto->hpposllh(i).itow());
-    (*net_signals)["HPPOSLLH"]["lon"].push(proto->hpposllh(i).lon());
-    (*net_signals)["HPPOSLLH"]["lat"].push(proto->hpposllh(i).lat());
-    (*net_signals)["HPPOSLLH"]["height"].push(proto->hpposllh(i).height());
-    (*net_signals)["HPPOSLLH"]["hMSL"].push(proto->hpposllh(i).hmsl());
-    (*net_signals)["HPPOSLLH"]["lonHp"].push(proto->hpposllh(i).lonhp());
-    (*net_signals)["HPPOSLLH"]["latHp"].push(proto->hpposllh(i).lathp());
-    (*net_signals)["HPPOSLLH"]["heightHp"].push(proto->hpposllh(i).heighthp());
-    (*net_signals)["HPPOSLLH"]["hMSLHp"].push(proto->hpposllh(i).hmslhp());
-    (*net_signals)["HPPOSLLH"]["hAcc"].push(proto->hpposllh(i).hacc());
-    (*net_signals)["HPPOSLLH"]["vAcc"].push(proto->hpposllh(i).vacc());
+    (*net_signals)[antenna_name + "_HPPOSLLH"]["version"].push(
+        proto->hpposllh(i).version());
+    (*net_signals)[antenna_name + "_HPPOSLLH"]["iTOW"].push(
+        proto->hpposllh(i).itow());
+    (*net_signals)[antenna_name + "_HPPOSLLH"]["lon"].push(
+        proto->hpposllh(i).lon());
+    (*net_signals)[antenna_name + "_HPPOSLLH"]["lat"].push(
+        proto->hpposllh(i).lat());
+    (*net_signals)[antenna_name + "_HPPOSLLH"]["height"].push(
+        proto->hpposllh(i).height());
+    (*net_signals)[antenna_name + "_HPPOSLLH"]["hMSL"].push(
+        proto->hpposllh(i).hmsl());
+    (*net_signals)[antenna_name + "_HPPOSLLH"]["lonHp"].push(
+        proto->hpposllh(i).lonhp());
+    (*net_signals)[antenna_name + "_HPPOSLLH"]["latHp"].push(
+        proto->hpposllh(i).lathp());
+    (*net_signals)[antenna_name + "_HPPOSLLH"]["heightHp"].push(
+        proto->hpposllh(i).heighthp());
+    (*net_signals)[antenna_name + "_HPPOSLLH"]["hMSLHp"].push(
+        proto->hpposllh(i).hmslhp());
+    (*net_signals)[antenna_name + "_HPPOSLLH"]["hAcc"].push(
+        proto->hpposllh(i).hacc());
+    (*net_signals)[antenna_name + "_HPPOSLLH"]["vAcc"].push(
+        proto->hpposllh(i).vacc());
   }
   for (int i = 0; i < proto->relposned_size(); i++) {
-    static uint64_t last_timestamp = 0;
-    if (proto->relposned(i)._inner_timestamp() - last_timestamp < resample_us)
+    if (shouldSkipSample("RELPOSNED", proto->relposned(i)._inner_timestamp()))
       continue;
-    else
-      last_timestamp = proto->relposned(i)._inner_timestamp();
-    (*net_signals)["RELPOSNED"]["_timestamp"].push(
+    (*net_signals)[antenna_name + "_RELPOSNED"]["_timestamp"].push(
         proto->relposned(i)._inner_timestamp());
-    (*net_signals)["RELPOSNED"]["version"].push(proto->relposned(i).version());
-    (*net_signals)["RELPOSNED"]["refStationId"].push(
+    (*net_signals)[antenna_name + "_RELPOSNED"]["version"].push(
+        proto->relposned(i).version());
+    (*net_signals)[antenna_name + "_RELPOSNED"]["refStationId"].push(
         proto->relposned(i).refstationid());
-    (*net_signals)["RELPOSNED"]["iTOW"].push(proto->relposned(i).itow());
-    (*net_signals)["RELPOSNED"]["relPosN"].push(proto->relposned(i).relposn());
-    (*net_signals)["RELPOSNED"]["relPosE"].push(proto->relposned(i).relpose());
-    (*net_signals)["RELPOSNED"]["relPosD"].push(proto->relposned(i).relposd());
-    (*net_signals)["RELPOSNED"]["relPosLength"].push(
+    (*net_signals)[antenna_name + "_RELPOSNED"]["iTOW"].push(
+        proto->relposned(i).itow());
+    (*net_signals)[antenna_name + "_RELPOSNED"]["relPosN"].push(
+        proto->relposned(i).relposn());
+    (*net_signals)[antenna_name + "_RELPOSNED"]["relPosE"].push(
+        proto->relposned(i).relpose());
+    (*net_signals)[antenna_name + "_RELPOSNED"]["relPosD"].push(
+        proto->relposned(i).relposd());
+    (*net_signals)[antenna_name + "_RELPOSNED"]["relPosLength"].push(
         proto->relposned(i).relposlength());
-    (*net_signals)["RELPOSNED"]["relPosHeading"].push(
+    (*net_signals)[antenna_name + "_RELPOSNED"]["relPosHeading"].push(
         proto->relposned(i).relposheading());
-    (*net_signals)["RELPOSNED"]["relPosHPN"].push(
+    (*net_signals)[antenna_name + "_RELPOSNED"]["relPosHPN"].push(
         proto->relposned(i).relposhpn());
-    (*net_signals)["RELPOSNED"]["relPosHPE"].push(
+    (*net_signals)[antenna_name + "_RELPOSNED"]["relPosHPE"].push(
         proto->relposned(i).relposhpe());
-    (*net_signals)["RELPOSNED"]["relPosHPD"].push(
+    (*net_signals)[antenna_name + "_RELPOSNED"]["relPosHPD"].push(
         proto->relposned(i).relposhpd());
-    (*net_signals)["RELPOSNED"]["relPosHPLength"].push(
+    (*net_signals)[antenna_name + "_RELPOSNED"]["relPosHPLength"].push(
         proto->relposned(i).relposhplength());
-    (*net_signals)["RELPOSNED"]["accN"].push(proto->relposned(i).accn());
-    (*net_signals)["RELPOSNED"]["accE"].push(proto->relposned(i).acce());
-    (*net_signals)["RELPOSNED"]["accD"].push(proto->relposned(i).accd());
-    (*net_signals)["RELPOSNED"]["accLength"].push(
+    (*net_signals)[antenna_name + "_RELPOSNED"]["accN"].push(
+        proto->relposned(i).accn());
+    (*net_signals)[antenna_name + "_RELPOSNED"]["accE"].push(
+        proto->relposned(i).acce());
+    (*net_signals)[antenna_name + "_RELPOSNED"]["accD"].push(
+        proto->relposned(i).accd());
+    (*net_signals)[antenna_name + "_RELPOSNED"]["accLength"].push(
         proto->relposned(i).acclength());
-    (*net_signals)["RELPOSNED"]["accHeading"].push(
+    (*net_signals)[antenna_name + "_RELPOSNED"]["accHeading"].push(
         proto->relposned(i).accheading());
-    (*net_signals)["RELPOSNED"]["flags    "].push(proto->relposned(i).flags());
+    (*net_signals)[antenna_name + "_RELPOSNED"]["flags    "].push(
+        proto->relposned(i).flags());
   }
   for (int i = 0; i < proto->velned_size(); i++) {
-    static uint64_t last_timestamp = 0;
-    if (proto->velned(i)._inner_timestamp() - last_timestamp < resample_us)
+    if (shouldSkipSample("VELNED", proto->velned(i)._inner_timestamp()))
       continue;
-    else
-      last_timestamp = proto->velned(i)._inner_timestamp();
-    (*net_signals)["VELNED"]["_timestamp"].push(
+    (*net_signals)[antenna_name + "_VELNED"]["_timestamp"].push(
         proto->velned(i)._inner_timestamp());
-    (*net_signals)["VELNED"]["iTOW"].push(proto->velned(i).itow());
-    (*net_signals)["VELNED"]["velN"].push(proto->velned(i).veln());
-    (*net_signals)["VELNED"]["velE"].push(proto->velned(i).vele());
-    (*net_signals)["VELNED"]["velD"].push(proto->velned(i).veld());
-    (*net_signals)["VELNED"]["speed"].push(proto->velned(i).speed());
-    (*net_signals)["VELNED"]["gSpeed"].push(proto->velned(i).gspeed());
-    (*net_signals)["VELNED"]["heading"].push(proto->velned(i).heading());
-    (*net_signals)["VELNED"]["sAcc"].push(proto->velned(i).sacc());
-    (*net_signals)["VELNED"]["cAcc"].push(proto->velned(i).cacc());
+    (*net_signals)[antenna_name + "_VELNED"]["iTOW"].push(
+        proto->velned(i).itow());
+    (*net_signals)[antenna_name + "_VELNED"]["velN"].push(
+        proto->velned(i).veln());
+    (*net_signals)[antenna_name + "_VELNED"]["velE"].push(
+        proto->velned(i).vele());
+    (*net_signals)[antenna_name + "_VELNED"]["velD"].push(
+        proto->velned(i).veld());
+    (*net_signals)[antenna_name + "_VELNED"]["speed"].push(
+        proto->velned(i).speed());
+    (*net_signals)[antenna_name + "_VELNED"]["gSpeed"].push(
+        proto->velned(i).gspeed());
+    (*net_signals)[antenna_name + "_VELNED"]["heading"].push(
+        proto->velned(i).heading());
+    (*net_signals)[antenna_name + "_VELNED"]["sAcc"].push(
+        proto->velned(i).sacc());
+    (*net_signals)[antenna_name + "_VELNED"]["cAcc"].push(
+        proto->velned(i).cacc());
+  }
+  for (int i = 0; i < proto->heading_size(); i++) {
+    if (shouldSkipSample("HEADING", proto->heading(i)._inner_timestamp()))
+      continue;
+    (*net_signals)[antenna_name + "_HEADING"]["_timestamp"].push(
+        proto->heading(i)._inner_timestamp());
+    (*net_signals)[antenna_name + "_HEADING"]["iTOW"].push(
+        proto->heading(i).itow());
+    (*net_signals)[antenna_name + "_HEADING"]["heading"].push(
+        proto->heading(i).heading());
+    (*net_signals)[antenna_name + "_HEADING"]["heading_stddev"].push(
+        proto->heading(i).heading_stddev());
+    (*net_signals)[antenna_name + "_HEADING"]["baseline"].push(
+        proto->heading(i).baseline());
   }
 }
 
@@ -433,4 +509,12 @@ void gps_serialize_velned(gps::NAV_VELNED *proto, gps_ubx_velned_t *data) {
   proto->set_heading(data->heading);
   proto->set_sacc(data->sAcc);
   proto->set_cacc(data->cAcc);
+}
+
+void gps_serialize_heading(gps::HEADING *proto, gps_heading_t *data) {
+  proto->set__inner_timestamp(data->_timestamp);
+  proto->set_itow(data->iTOW);
+  proto->set_heading(data->heading);
+  proto->set_heading_stddev(data->heading_stddev);
+  proto->set_baseline(data->baseline);
 }

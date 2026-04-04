@@ -138,7 +138,7 @@ typedef struct gps_nmea_gsa_t {
   FIELD(20, int8_t, double, "%f", 1e-4, 0, "m", ecefXHp)     \
   FIELD(21, int8_t, double, "%f", 1e-4, 0, "m", ecefYHp)     \
   FIELD(22, int8_t, double, "%f", 1e-4, 0, "m", ecefZHp)     \
-  FIELD(24, uint32_t, uint32_t, "%" PRIu32, 1e-4, 0, "m", pAcc)
+  FIELD(24, uint32_t, double, "%f", 1e-4, 0, "m", pAcc)
 
 // FIELD(byte_offset, original_type, struct_type, scale, offset, unit, name)
 #define GPS_UBX_HPPOSLLH_FIELDS                              \
@@ -186,6 +186,12 @@ typedef struct gps_nmea_gsa_t {
   FIELD(24, int32_t, double, "%f", 1e-5, 0, "deg", heading)  \
   FIELD(28, uint32_t, double, "%f", 1e-2, 0, "m/s", sAcc)    \
   FIELD(32, uint32_t, double, "%f", 1e-5, 0, "deg", cAcc)
+
+  #define GPS_HEADING_FIELDS \
+  FIELD(0, uint32_t, uint32_t, "%" PRIu32, 1, 0, "ms", iTOW)  \
+  FIELD(4, double, double, "%f", 1e-2, 0, "deg", heading)     \
+  FIELD(8, double, double, "%f", 1e-2, 0, "deg", heading_stddev) \
+  FIELD(12,double, double, "%f", 1e-2, 0, "m", baseline)     
 
 // Dilution of precision
 typedef struct gps_ubx_dop_t {
@@ -243,6 +249,15 @@ typedef struct gps_ubx_velned_t {
   GPS_UBX_VELNED_FIELDS
 #undef FIELD
 } gps_ubx_velned_t;
+
+typedef struct gps_heading_t {
+  uint64_t _timestamp;
+#define FIELD(byte_offset, original_type, struct_type, formatter, scale, \
+              offset, unit, name)                                        \
+  struct_type name;
+  GPS_HEADING_FIELDS
+#undef FIELD
+} gps_heading_t;
 
 typedef struct gps_parsed_data_t {
   // NMEA
