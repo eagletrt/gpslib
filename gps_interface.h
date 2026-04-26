@@ -28,11 +28,13 @@ typedef struct gps_serial_port {
 } gps_serial_port;
 
 typedef struct gps_server_ctx {
-  gps_serial_port serial_port;
-  int server_socket_fd;
+  gps_serial_port **serial_port;
+  int *server_socket_fd;
+  int n_port;
 
   int client_sockets[MAX_CLIENTS];
   int client_fails[MAX_CLIENTS];
+  int client_port_index[MAX_CLIENTS];
   int client_count;
   volatile sig_atomic_t should_exit;
   pthread_mutex_t clients_mutex;
@@ -41,9 +43,19 @@ typedef struct gps_server_ctx {
 
 } gps_server_ctx;
 
+typedef struct gps_interface_desc {
+  enum SERIAL_MODE type;
+  char *ip_address;
+  char *port;
+  speed_t speed;
+} gps_interface_desc;
+
 void gps_interface_initialize(gps_serial_port *);
 
 int gps_interface_read(gps_serial_port *port, void *__buf, size_t __nbytes);
+
+int gps_interface_open(gps_serial_port *new_serial_port,
+                       const gps_interface_desc *desc);
 
 int gps_interface_open_serial_port(gps_serial_port *new_serial_port,
                                    const char *port, speed_t speed);
@@ -52,8 +64,9 @@ int gps_interface_open_log_file(gps_serial_port *new_serial_port,
 int gps_interface_open_udp(gps_serial_port *new_serial_port,
                            const char *ip_and_port);
 int gps_interface_open_server(gps_serial_port *new_serial_port,
-                              const char *tcp_port, const char *port,
-                              speed_t speed);
+                              const char **tcp_ports,
+                              const gps_interface_desc *descs,
+                              const int n_port);
 int gps_interface_open_client(gps_serial_port *new_serial_port,
                               const char *ip_address, const char *tcp_port);
 
