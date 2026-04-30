@@ -45,9 +45,11 @@ typedef struct gps_server_ctx {
 
 typedef struct gps_interface_desc {
   enum SERIAL_MODE type;
-  char *ip_address;
   char *port;
-  speed_t speed;
+  union {
+    char *ip_address;
+    speed_t speed;
+  };
 } gps_interface_desc;
 
 void gps_interface_initialize(gps_serial_port *);
