@@ -346,6 +346,19 @@ int gps_interface_open_udp(gps_serial_port *port, const char *udp_port) {
   return 0;
 }
 
+void free_interfaces(gps_serial_port **interfaces, int count) {
+  if (!interfaces)
+    return;
+
+  for (int j = 0; j < count; j++) {
+    if (interfaces[j]) {
+      gps_interface_close(interfaces[j]);
+      free(interfaces[j]);
+    }
+  }
+  free(interfaces);
+}
+
 int gps_interface_open_server(gps_serial_port *new_serial_port,
                               const char **tcp_port,
                               const gps_interface_desc *descs,
@@ -373,34 +386,21 @@ int gps_interface_open_server(gps_serial_port *new_serial_port,
   for (int i = 0; i < n_port; i++) {
     interfaces[i] = malloc(sizeof(gps_serial_port));
     if (!interfaces[i]) {
-      for (int j = 0; j < i; j++) {
-        gps_interface_close(interfaces[j]);
-        free(interfaces[j]);
-      }
-      free(interfaces);
+      free_interfaces(interfaces, i);
       return -1;
     }
     gps_interface_initialize(interfaces[i]);
 
     if (gps_interface_open(interfaces[i], &descs[i]) < 0) {
       printf("GPS Server: failed to open interface %d\n", i);
-      for (int j = 0; j < i; j++) {
-        gps_interface_close(interfaces[j]);
-        free(interfaces[j]);
-      }
-      free(interfaces[i]);
-      free(interfaces);
+      free_interfaces(interfaces, i + 1);
       return -1;
     }
   }
 
   gps_server_ctx *ctx = malloc(sizeof(gps_server_ctx));
   if (!ctx) {
-    for (int j = 0; j < n_port; j++) {
-      gps_interface_close(interfaces[j]);
-      free(interfaces[j]);
-    }
-    free(interfaces);
+    free_interfaces(interfaces, n_port);
     return -1;
   }
 
@@ -410,11 +410,7 @@ int gps_interface_open_server(gps_serial_port *new_serial_port,
   ctx->n_port = n_port;
 
   if (pthread_mutex_init(&ctx->clients_mutex, NULL) != 0) {
-    for (int j = 0; j < n_port; j++) {
-      gps_interface_close(interfaces[j]);
-      free(interfaces[j]);
-    }
-    free(interfaces);
+    free_interfaces(interfaces, n_port);
     free(ctx);
     return -1;
   }
@@ -423,11 +419,7 @@ int gps_interface_open_server(gps_serial_port *new_serial_port,
   if (!ctx->server_socket_fd) {
     perror("GPS Server: Socket creation failed\n");
     pthread_mutex_destroy(&ctx->clients_mutex);
-    for (int j = 0; j < n_port; j++) {
-      gps_interface_close(interfaces[j]);
-      free(interfaces[j]);
-    }
-    free(interfaces);
+    free_interfaces(interfaces, n_port);
     free(ctx);
     return -1;
   }
@@ -436,15 +428,11 @@ int gps_interface_open_server(gps_serial_port *new_serial_port,
     if (ctx->server_socket_fd[i] == -1) {
       perror("GPS Server: Socket creation failed\n");
       pthread_mutex_destroy(&ctx->clients_mutex);
-      for (int j = 0; j < n_port; j++) {
-        if (j < i) {
-          close(ctx->server_socket_fd[j]);
-        }
-        gps_interface_close(interfaces[j]);
-        free(interfaces[j]);
+      for (int j = 0; j < i; j++) {
+        close(ctx->server_socket_fd[j]);
       }
       free(ctx->server_socket_fd);
-      free(interfaces);
+      free_interfaces(interfaces, n_port);
       free(ctx);
       return -1;
     }
@@ -454,15 +442,11 @@ int gps_interface_open_server(gps_serial_port *new_serial_port,
                    sizeof(opt)) < 0) {
       perror("GPS Server: Setsockopt failed\n");
       pthread_mutex_destroy(&ctx->clients_mutex);
-      for (int j = 0; j < n_port; j++) {
-        if (j <= i) {
-          close(ctx->server_socket_fd[j]);
-        }
-        gps_interface_close(interfaces[j]);
-        free(interfaces[j]);
+      for (int j = 0; j <= i; j++) {
+        close(ctx->server_socket_fd[j]);
       }
       free(ctx->server_socket_fd);
-      free(interfaces);
+      free_interfaces(interfaces, n_port);
       free(ctx);
       return -1;
     }
@@ -474,15 +458,11 @@ int gps_interface_open_server(gps_serial_port *new_serial_port,
                    sizeof(timeout)) < 0) {
       perror("GPS Server: Setsocketopt timeout failed");
       pthread_mutex_destroy(&ctx->clients_mutex);
-      for (int j = 0; j < n_port; j++) {
-        if (j <= i) {
-          close(ctx->server_socket_fd[j]);
-        }
-        gps_interface_close(interfaces[j]);
-        free(interfaces[j]);
+      for (int j = 0; j <= i; j++) {
+        close(ctx->server_socket_fd[j]);
       }
       free(ctx->server_socket_fd);
-      free(interfaces);
+      free_interfaces(interfaces, n_port);
       free(ctx);
       return -1;
     }
@@ -496,15 +476,11 @@ int gps_interface_open_server(gps_serial_port *new_serial_port,
         0) {
       perror("GPS Server: Bind failed\n");
       pthread_mutex_destroy(&ctx->clients_mutex);
-      for (int j = 0; j < n_port; j++) {
-        if (j <= i) {
-          close(ctx->server_socket_fd[j]);
-        }
-        gps_interface_close(interfaces[j]);
-        free(interfaces[j]);
+      for (int j = 0; j <= i; j++) {
+        close(ctx->server_socket_fd[j]);
       }
       free(ctx->server_socket_fd);
-      free(interfaces);
+      free_interfaces(interfaces, n_port);
       free(ctx);
       return -1;
     }
@@ -512,15 +488,11 @@ int gps_interface_open_server(gps_serial_port *new_serial_port,
     if (listen(ctx->server_socket_fd[i], MAX_CLIENTS) < 0) {
       perror("GPS Server: Listen failed\n");
       pthread_mutex_destroy(&ctx->clients_mutex);
-      for (int j = 0; j < n_port; j++) {
-        if (j <= i) {
-          close(ctx->server_socket_fd[j]);
-        }
-        gps_interface_close(interfaces[j]);
-        free(interfaces[j]);
+      for (int j = 0; j <= i; j++) {
+        close(ctx->server_socket_fd[j]);
       }
       free(ctx->server_socket_fd);
-      free(interfaces);
+      free_interfaces(interfaces, n_port);
       free(ctx);
       return -1;
     }
@@ -532,11 +504,9 @@ int gps_interface_open_server(gps_serial_port *new_serial_port,
     pthread_mutex_destroy(&ctx->clients_mutex);
     for (int j = 0; j < n_port; j++) {
       close(ctx->server_socket_fd[j]);
-      gps_interface_close(interfaces[j]);
-      free(interfaces[j]);
     }
     free(ctx->server_socket_fd);
-    free(interfaces);
+    free_interfaces(interfaces, n_port);
     free(ctx);
     return -1;
   }
