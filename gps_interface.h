@@ -57,7 +57,8 @@ void gps_interface_initialize(gps_serial_port *);
 int gps_interface_read(gps_serial_port *port, void *__buf, size_t __nbytes);
 
 int gps_interface_open(gps_serial_port *new_serial_port,
-                       const gps_interface_desc *desc);
+                       const gps_interface_desc *desc, const char **tcp_ports,
+                       const int n_port);
 
 int gps_interface_open_serial_port(gps_serial_port *new_serial_port,
                                    const char *port, speed_t speed);
@@ -66,9 +67,8 @@ int gps_interface_open_log_file(gps_serial_port *new_serial_port,
 int gps_interface_open_udp(gps_serial_port *new_serial_port,
                            const char *ip_and_port);
 int gps_interface_open_server(gps_serial_port *new_serial_port,
-                              const char **tcp_ports,
                               const gps_interface_desc *descs,
-                              const int n_port);
+                              const char **tcp_ports, const int n_port);
 int gps_interface_open_client(gps_serial_port *new_serial_port,
                               const char *ip_address, const char *tcp_port);
 

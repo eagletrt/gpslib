@@ -176,9 +176,18 @@ int gps_get_timestamp(gps_serial_port *port, uint64_t *timestamp) {
   return 0;
 }
 
-int gps_interface_open(gps_serial_port *port, const gps_interface_desc *desc) {
+int gps_interface_open(gps_serial_port *port, const gps_interface_desc *desc,
+                       const char **tcp_ports, const int n_port) {
   if (!port || !desc)
     return -1;
+
+  if (desc->type != SERVER) {
+    if (n_port != 0 || tcp_ports != NULL) {
+      printf("GPS Interface: n_port must be 0 and tcp_ports must be NULL for "
+             "non-server types.\n");
+      return -1;
+    }
+  }
 
   switch (desc->type) {
   case USB:
@@ -197,6 +206,10 @@ int gps_interface_open(gps_serial_port *port, const gps_interface_desc *desc) {
     if (!desc->ip_address || !desc->port)
       return -1;
     return gps_interface_open_client(port, desc->ip_address, desc->port);
+  case SERVER:
+    if (n_port <= 0 || !tcp_ports)
+      return -1;
+    return gps_interface_open_server(port, desc, tcp_ports, n_port);
   default:
     printf("GPS Interface: unsupported type %d\n", desc->type);
     return -1;
@@ -360,9 +373,8 @@ void free_interfaces(gps_serial_port **interfaces, int count) {
 }
 
 int gps_interface_open_server(gps_serial_port *new_serial_port,
-                              const char **tcp_port,
                               const gps_interface_desc *descs,
-                              const int n_port) {
+                              const char **tcp_port, const int n_port) {
   if (!new_serial_port || !tcp_port || !descs || n_port <= 0)
     return -1;
 
@@ -391,7 +403,7 @@ int gps_interface_open_server(gps_serial_port *new_serial_port,
     }
     gps_interface_initialize(interfaces[i]);
 
-    if (gps_interface_open(interfaces[i], &descs[i]) < 0) {
+    if (gps_interface_open(interfaces[i], &descs[i], NULL, 0) < 0) {
       printf("GPS Server: failed to open interface %d\n", i);
       free_interfaces(interfaces, i + 1);
       return -1;
