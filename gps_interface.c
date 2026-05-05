@@ -183,7 +183,7 @@ int gps_interface_open(gps_serial_port *port, const gps_interface_desc *desc,
 
   if (desc->type != SERVER) {
     if (n_port != 0 || tcp_ports != NULL) {
-      printf("GPS Interface: n_port must be 0 and tcp_ports must be NULL for "
+      perror("GPS Interface: n_port must be 0 and tcp_ports must be NULL for "
              "non-server types.\n");
       return -1;
     }
