@@ -696,8 +696,8 @@ void gps_construct_filename(char *dest, const char *path, char *helper_buff,
 int gps_open_files(gps_files_t *files, const char *path) {
   const int message_size = 20;
   const int filepath_size = 100;
-  char message[message_size];
-  char filepath[filepath_size];
+  char* message = (char*)malloc(message_size);
+  char* filepath = (char*)malloc(filepath_size);
   gps_protocol_and_message match;
   match.protocol = GPS_PROTOCOL_TYPE_NMEA;
   for (int i = 0; i < GPS_NMEA_TYPE_SIZE; i++) {
@@ -706,6 +706,8 @@ int gps_open_files(gps_files_t *files, const char *path) {
     files->nmea[i] = fopen(filepath, "w");
     if (files->nmea[i] == NULL) {
       printf("GPS: could not open file %s\n", filepath);
+      free(message);
+      free(filepath);
       return -1;
     }
   }
@@ -716,9 +718,13 @@ int gps_open_files(gps_files_t *files, const char *path) {
     files->ubx[i] = fopen(filepath, "w");
     if (files->ubx[i] == NULL) {
       printf("GPS: could not open file %s\n", filepath);
+      free(message);
+      free(filepath);
       return -1;
     }
   }
+  free(message);
+  free(filepath);
   return 0;
 }
 
