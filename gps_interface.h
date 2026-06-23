@@ -58,7 +58,7 @@ int gps_interface_read(gps_serial_port *port, void *__buf, size_t __nbytes);
 
 int gps_interface_open(gps_serial_port *new_serial_port,
                        const gps_interface_desc *desc, const char **tcp_ports,
-                       const int n_port);
+                       const int n_port, enum SERIAL_MODE type);
 
 int gps_interface_open_serial_port(gps_serial_port *new_serial_port,
                                    const char *port, speed_t speed);
