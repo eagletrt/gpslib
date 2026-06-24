@@ -197,7 +197,9 @@ int gps_interface_open(gps_serial_port *port, const gps_interface_desc *desc,
       if (!desc->port) return -1;
       return gps_interface_open_udp(port, desc->port);
     case CLIENT:
-      if (!desc->ip_address || !desc->port) return -1;
+      if (!desc->ip_address || !desc->port) {
+        return -1;
+      }
       return gps_interface_open_client(port, desc->ip_address, desc->port);
     case SERVER:
       if (n_port <= 0 || !tcp_ports) return -1;
@@ -511,6 +513,10 @@ int gps_interface_open_server(gps_serial_port *new_serial_port,
   new_serial_port->ctx = ctx;
   new_serial_port->open = 1;
 
+  for (int k = 0; k < n_port; k++) {
+    ctx->serial_port[k]->ctx = ctx;
+  }
+
   printf("GPS Server started on:\n");
   for (int i = 0; i < n_port; i++) {
     printf("port %s for the gps at %s\n", tcp_port[i],
@@ -748,8 +754,7 @@ gps_protocol_type gps_interface_get_line(
       saved_line_size = cur_line_size;
     }
 
-    if (type != GPS_PROTOCOL_TYPE_SIZE && port->type == SERVER &&
-        port->ctx != NULL) {
+    if (type != GPS_PROTOCOL_TYPE_SIZE && active->ctx != NULL) {
       char full_msg[GPS_MAX_LINE_SIZE + GPS_MAX_START_SEQUENCE_SIZE + 2];
       int total_len = cur_start_size;
       memcpy(full_msg, cur_start, cur_start_size);
@@ -759,7 +764,17 @@ gps_protocol_type gps_interface_get_line(
         full_msg[total_len++] = CLK_A;
         full_msg[total_len++] = CLK_B;
       }
-      broadcast_to_clients(port->ctx, full_msg, total_len, i);
+
+      int port_idx = i;
+      if (port->type != SERVER) {
+        for (int j = 0; j < active->ctx->n_port; j++) {
+          if (active->ctx->serial_port[j] == active) {
+            port_idx = j;
+            break;
+          }
+        }
+      }
+      broadcast_to_clients(active->ctx, full_msg, total_len, port_idx);
     }
 
     i++;
