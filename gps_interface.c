@@ -151,7 +151,9 @@ int gps_get_timestamp(gps_serial_port *port, uint64_t *timestamp) {
   int err = 0;
   while (c != '(') {
     if ((err = gps_interface_read(port, &c, sizeof(c))) <= 0) {
-      printf("Error reading from port: %d: %d\n", err, errno);
+      if (port->fd >= 0) {
+        printf("Error reading from port: %d: %d\n", err, errno);
+      }
       return -1;
     }
   }
@@ -575,7 +577,9 @@ void gps_interface_shutdown_server(gps_serial_port *serial_port) {
 
   ctx->should_exit = 1;
   for (int i = 0; i < ctx->n_port; i++) {
-    shutdown(ctx->server_socket_fd[i], SHUT_RDWR);
+    if (ctx->server_socket_fd[i] >= 0) {
+      shutdown(ctx->server_socket_fd[i], SHUT_RDWR);
+    }
   }
 }
 
@@ -598,7 +602,9 @@ void gps_interface_close(gps_serial_port *serial_port) {
       pthread_mutex_destroy(&ctx->clients_mutex);
 
       for (int i = 0; i < ctx->n_port; i++) {
-        close(ctx->server_socket_fd[i]);
+        if (ctx->server_socket_fd[i] >= 0) {
+          close(ctx->server_socket_fd[i]);
+        }
         gps_interface_close(ctx->serial_port[i]);
         free(ctx->serial_port[i]);
       }
@@ -786,4 +792,31 @@ gps_protocol_type gps_interface_get_line(
   *line_size = saved_line_size;
 
   return result;
+}
+
+void gps_interface_interrupt(gps_serial_port *port) {
+  if (port->type == SERVER && port->ctx != NULL) {
+    gps_server_ctx *ctx = port->ctx;
+    ctx->should_exit = 1;
+    /* close server sockets to immediately unblock accept() */
+    for (int i = 0; i < ctx->n_port; i++) {
+      if (ctx->server_socket_fd[i] >= 0) {
+        close(ctx->server_socket_fd[i]);
+        ctx->server_socket_fd[i] = -1;
+      }
+    }
+    /* close sub-port fds to unblock reads in reader threads */
+    for (int i = 0; i < ctx->n_port; i++) {
+      gps_serial_port *sp = ctx->serial_port[i];
+      if (sp->fd >= 0) {
+        close(sp->fd);
+        sp->fd = -1;
+      }
+    }
+  } else {
+    if (port->fd >= 0) {
+      close(port->fd);
+      port->fd = -1;
+    }
+  }
 }
