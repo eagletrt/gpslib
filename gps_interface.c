@@ -768,7 +768,7 @@ gps_protocol_type gps_interface_get_line(
       int port_idx = i;
       if (port->type != SERVER) {
         for (int j = 0; j < active->ctx->n_port; j++) {
-          if (active->ctx->serial_port[j] == active) {
+          if (active->ctx->serial_port[j]->fd == active->fd) {
             port_idx = j;
             break;
           }
