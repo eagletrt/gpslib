@@ -130,7 +130,7 @@ static uint64_t get_real_timestamp() {
 }
 
 void gps_interface_initialize(gps_serial_port *port) {
-  port->port = NULL;
+  memset(&port->id, 0, sizeof(port->id));
   port->fd = -1;
   port->open = 0;
   port->type = -1;
@@ -175,7 +175,7 @@ int gps_get_timestamp(gps_serial_port *port, uint64_t *timestamp) {
 }
 
 int gps_interface_open(gps_serial_port *port, const gps_interface_desc *desc,
-                       const char **tcp_ports, const int n_port,
+                       const int **tcp_ports, const int n_port,
                        enum SERIAL_MODE type) {
   if (!port || !desc) return -1;
 
@@ -190,19 +190,19 @@ int gps_interface_open(gps_serial_port *port, const gps_interface_desc *desc,
 
   switch (type) {
     case USB:
-      if (!desc->port) return -1;
-      return gps_interface_open_serial_port(port, desc->port, desc->speed);
+      if (!desc->address) return -1;
+      return gps_interface_open_serial_port(port, desc->address, desc->speed);
     case LOG_FILE:
-      if (!desc->port) return -1;
-      return gps_interface_open_log_file(port, desc->port);
+      if (!desc->address) return -1;
+      return gps_interface_open_log_file(port, desc->address);
     case UDP_PORT:
       if (!desc->port) return -1;
       return gps_interface_open_udp(port, desc->port);
     case CLIENT:
-      if (!desc->ip_address || !desc->port) {
+      if (!desc->address || !desc->port) {
         return -1;
       }
-      return gps_interface_open_client(port, desc->ip_address, desc->port);
+      return gps_interface_open_client(port, desc->address, desc->port);
     case SERVER:
       if (n_port <= 0 || !tcp_ports) return -1;
       return gps_interface_open_server(port, desc, tcp_ports, n_port);
@@ -224,9 +224,9 @@ int gps_interface_open_log_file(gps_serial_port *new_serial_port,
 
   if (new_serial_port->fd == -1) return -1;  // Error
 
-  new_serial_port->port = (char *)malloc(strlen(filename) + 1);
-  memset(new_serial_port->port, 0, strlen(filename) + 1);
-  strncpy(new_serial_port->port, filename, strlen(filename));
+  new_serial_port->id.path = (char *)malloc(strlen(filename) + 1);
+  memset(new_serial_port->id.path, 0, strlen(filename) + 1);
+  strncpy(new_serial_port->id.path, filename, strlen(filename));
   new_serial_port->open = 1;
   new_serial_port->read_offset = 0;
   new_serial_port->first_log_timestamp = 0;
@@ -247,9 +247,9 @@ int gps_interface_open_serial_port(gps_serial_port *new_serial_port,
     printf("GPS Interface: Error opening fd\n");
     return -1;
   }
-  new_serial_port->port = (char *)malloc(strlen(port) + 1);
-  memset(new_serial_port->port, 0, strlen(port) + 1);
-  strcpy(new_serial_port->port, port);
+  new_serial_port->id.path = (char *)malloc(strlen(port) + 1);
+  memset(new_serial_port->id.path, 0, strlen(port) + 1);
+  strcpy(new_serial_port->id.path, port);
 
   struct termios tty;
 
@@ -313,7 +313,7 @@ int gps_interface_open_serial_port(gps_serial_port *new_serial_port,
   return 0;
 }
 
-int gps_interface_open_udp(gps_serial_port *port, const char *udp_port) {
+int gps_interface_open_udp(gps_serial_port *port, const int udp_port) {
   if (!port || !udp_port) return -1;
 
   port->open = 0;
@@ -324,13 +324,11 @@ int gps_interface_open_udp(gps_serial_port *port, const char *udp_port) {
     return -1;
   }
 
-  port->port = (char *)malloc(strlen(udp_port) + 1);
-  memset(port->port, 0, strlen(udp_port) + 1);
-  strcpy(port->port, udp_port);
+  port->id.net_port = udp_port;
 
   struct sockaddr_in addr;
   addr.sin_family = AF_INET;
-  addr.sin_port = htons(atoi(udp_port));
+  addr.sin_port = htons(udp_port);
   addr.sin_addr.s_addr = htonl(INADDR_ANY);
 
   int reuse = 1;
@@ -365,11 +363,11 @@ void free_interfaces(gps_serial_port **interfaces, int count) {
 
 int gps_interface_open_server(gps_serial_port *new_serial_port,
                               const gps_interface_desc *descs,
-                              const char **tcp_port, const int n_port) {
-  if (!new_serial_port || !tcp_port || !descs || n_port <= 0) return -1;
+                              const int **tcp_ports, const int n_port) {
+  if (!new_serial_port || !tcp_ports || !descs || n_port <= 0) return -1;
 
   for (int i = 0; i < n_port; i++) {
-    if (!tcp_port[i]) return -1;
+    if (!tcp_ports[i]) return -1;
     if (descs[i].type == SERVER || descs[i].type == CLIENT) {
       printf("GPS Server: invalid inner interface type %d at index %d\n",
              descs[i].type, i);
@@ -471,7 +469,7 @@ int gps_interface_open_server(gps_serial_port *new_serial_port,
     struct sockaddr_in addr;
     addr.sin_family = AF_INET;
     addr.sin_addr.s_addr = INADDR_ANY;
-    addr.sin_port = htons(atoi(tcp_port[i]));
+    addr.sin_port = htons(*tcp_ports[i]);
 
     if (bind(ctx->server_socket_fd[i], (struct sockaddr *)&addr, sizeof(addr)) <
         0) {
@@ -521,14 +519,19 @@ int gps_interface_open_server(gps_serial_port *new_serial_port,
 
   printf("GPS Server started on:\n");
   for (int i = 0; i < n_port; i++) {
-    printf("port %s for the gps at %s\n", tcp_port[i],
-           ctx->serial_port[i]->port);
+    gps_serial_port *sp = ctx->serial_port[i];
+    if (sp->type == USB || sp->type == LOG_FILE) {
+      printf("port %d for the gps at %s\n", *tcp_ports[i], sp->id.path);
+    } else {
+      printf("port %d for the gps at UDP port %d\n", *tcp_ports[i],
+             sp->id.net_port);
+    }
   }
   return 0;
 }
 
 int gps_interface_open_client(gps_serial_port *new_serial_port,
-                              const char *ip_address, const char *tcp_port) {
+                              const char *ip_address, const int tcp_port) {
   if (!new_serial_port || !ip_address || !tcp_port) return -1;
 
   gps_interface_initialize(new_serial_port);
@@ -544,7 +547,7 @@ int gps_interface_open_client(gps_serial_port *new_serial_port,
   struct sockaddr_in serv_addr;
   memset(&serv_addr, 0, sizeof(serv_addr));
   serv_addr.sin_family = AF_INET;
-  serv_addr.sin_port = htons(atoi(tcp_port));
+  serv_addr.sin_port = htons(tcp_port);
 
   if (inet_pton(AF_INET, ip_address, &serv_addr.sin_addr) <= 0) {
     printf("Client: Invalid address/ Address not supported \n");
@@ -552,7 +555,7 @@ int gps_interface_open_client(gps_serial_port *new_serial_port,
     return -1;
   }
 
-  printf("Client: Connecting to %s:%s...\n", ip_address, tcp_port);
+  printf("Client: Connecting to %s:%d...\n", ip_address, tcp_port);
 
   if (connect(new_serial_port->fd, (struct sockaddr *)&serv_addr,
               sizeof(serv_addr)) < 0) {
@@ -563,8 +566,7 @@ int gps_interface_open_client(gps_serial_port *new_serial_port,
 
   printf("Client: Connected!\n");
 
-  new_serial_port->port = malloc(strlen(tcp_port) + 1);
-  strcpy(new_serial_port->port, tcp_port);
+  new_serial_port->id.net_port = tcp_port;
 
   new_serial_port->open = 1;
   return 0;
@@ -617,9 +619,10 @@ void gps_interface_close(gps_serial_port *serial_port) {
   if (serial_port->fd >= 0) {
     close(serial_port->fd);
   }
-  if (serial_port->port) {
-    free(serial_port->port);
-    serial_port->port = NULL;
+  if ((serial_port->type == USB || serial_port->type == LOG_FILE) &&
+      serial_port->id.path) {
+    free(serial_port->id.path);
+    serial_port->id.path = NULL;
   }
 }
 

@@ -17,7 +17,10 @@ typedef struct gps_server_ctx gps_server_ctx;
 
 typedef struct gps_serial_port {
   enum SERIAL_MODE type;
-  char *port;
+  union {
+    char *path;   /* valid when type == USB || type == LOG_FILE */
+    int net_port; /* valid when type == UDP_PORT || type == CLIENT */
+  } id;
   int open;
   int fd;
   uint64_t timestamp;
@@ -44,10 +47,10 @@ typedef struct gps_server_ctx {
 } gps_server_ctx;
 
 typedef struct gps_interface_desc {
+  char *address;
   enum SERIAL_MODE type;
-  char *port;
   union {
-    char *ip_address;
+    int port;
     speed_t speed;
   };
 } gps_interface_desc;
@@ -57,7 +60,7 @@ void gps_interface_initialize(gps_serial_port *);
 int gps_interface_read(gps_serial_port *port, void *__buf, size_t __nbytes);
 
 int gps_interface_open(gps_serial_port *new_serial_port,
-                       const gps_interface_desc *desc, const char **tcp_ports,
+                       const gps_interface_desc *desc, const int **tcp_ports,
                        const int n_port, enum SERIAL_MODE type);
 
 int gps_interface_open_serial_port(gps_serial_port *new_serial_port,
@@ -65,12 +68,12 @@ int gps_interface_open_serial_port(gps_serial_port *new_serial_port,
 int gps_interface_open_log_file(gps_serial_port *new_serial_port,
                                 const char *filename);
 int gps_interface_open_udp(gps_serial_port *new_serial_port,
-                           const char *ip_and_port);
+                           const int udp_port);
 int gps_interface_open_server(gps_serial_port *new_serial_port,
                               const gps_interface_desc *descs,
-                              const char **tcp_ports, const int n_port);
+                              const int **tcp_ports, const int n_port);
 int gps_interface_open_client(gps_serial_port *new_serial_port,
-                              const char *ip_address, const char *tcp_port);
+                              const char *ip_address, const int tcp_port);
 
 void gps_interface_close(gps_serial_port *serial_port);
 void gps_interface_shutdown_server(gps_serial_port *serial_port);
