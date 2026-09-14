@@ -54,12 +54,12 @@ typedef struct gps_protocol_and_message {
 } gps_protocol_and_message;
 
 typedef struct gps_nmea_gga_t {
-  uint64_t _timestamp;
+  uint64_t timestamp;
   char time[9];
   double latitude;
   char north_south;
   double longitude;
-  char east_ovest;
+  char east_ovest; 
   uint8_t fix;
   uint8_t satellites;
   double horizontal_diluition_precision;
@@ -69,14 +69,14 @@ typedef struct gps_nmea_gga_t {
 } gps_nmea_gga_t;
 
 typedef struct gps_nmea_vtg_t {
-  uint64_t _timestamp;
+  uint64_t timestamp;
   double course_over_ground_degrees;
   double course_over_ground_degrees_magnetic;
   double speed_kmh;
 } gps_nmea_vtg_t;
 
 typedef struct gps_nmea_gsa_t {
-  uint64_t _timestamp;
+  uint64_t timestamp;
   char mode;
   double position_diluition_precision;
   double horizontal_diluition_precision;
@@ -195,7 +195,7 @@ typedef struct gps_nmea_gsa_t {
 
 // Dilution of precision
 typedef struct gps_ubx_dop_t {
-  uint64_t _timestamp;
+  uint64_t timestamp;
 #define FIELD(byte_offset, original_type, struct_type, formatter, scale, \
               offset, unit, name)                                        \
   struct_type name;
@@ -204,7 +204,7 @@ typedef struct gps_ubx_dop_t {
 } gps_ubx_dop_t;
 // Navigation Position Velocity Time Solution
 typedef struct gps_ubx_pvt_t {
-  uint64_t _timestamp;
+  uint64_t timestamp;
 #define FIELD(byte_offset, original_type, struct_type, formatter, scale, \
               offset, unit, name)                                        \
   struct_type name;
@@ -214,7 +214,7 @@ typedef struct gps_ubx_pvt_t {
 
 // High Precision Position Solution in ECEF
 typedef struct gps_ubx_hpposecef_t {
-  uint64_t _timestamp;
+  uint64_t timestamp;
 #define FIELD(byte_offset, original_type, struct_type, formatter, scale, \
               offset, unit, name)                                        \
   struct_type name;
@@ -224,7 +224,7 @@ typedef struct gps_ubx_hpposecef_t {
 
 // High Precision Geodetic Position Solution
 typedef struct gps_ubx_hpposllh_t {
-  uint64_t _timestamp;
+  uint64_t timestamp;
 #define FIELD(byte_offset, original_type, struct_type, formatter, scale, \
               offset, unit, name)                                        \
   struct_type name;
@@ -233,7 +233,7 @@ typedef struct gps_ubx_hpposllh_t {
 } gps_ubx_hpposllh_t;
 
 typedef struct gps_ubx_relposned_t {
-  uint64_t _timestamp;
+  uint64_t timestamp;
 #define FIELD(byte_offset, original_type, struct_type, formatter, scale, \
               offset, unit, name)                                        \
   struct_type name;
@@ -242,7 +242,7 @@ typedef struct gps_ubx_relposned_t {
 } gps_ubx_relposned_t;
 
 typedef struct gps_ubx_velned_t {
-  uint64_t _timestamp;
+  uint64_t timestamp;
 #define FIELD(byte_offset, original_type, struct_type, formatter, scale, \
               offset, unit, name)                                        \
   struct_type name;
@@ -251,7 +251,7 @@ typedef struct gps_ubx_velned_t {
 } gps_ubx_velned_t;
 
 typedef struct gps_heading_t {
-  uint64_t _timestamp;
+  uint64_t timestamp;
 #define FIELD(byte_offset, original_type, struct_type, formatter, scale, \
               offset, unit, name)                                        \
   struct_type name;

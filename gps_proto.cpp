@@ -128,9 +128,9 @@ void gps_proto_deserialize(gps::GpsPack *proto, network_enums *net_enums,
   };
 
   for (int i = 0; i < proto->gga_size(); i++) {
-    if (shouldSkipSample("GGA", proto->gga(i)._inner_timestamp())) continue;
-    (*net_signals)[antenna_name + "_GGA"]["_timestamp"].push(
-        proto->gga(i)._inner_timestamp());
+    if (shouldSkipSample("GGA", proto->gga(i).timestamp())) continue;
+    (*net_signals)[antenna_name + "_GGA"]["timestamp"].push(
+        proto->gga(i).timestamp());
     (*net_strings)[antenna_name + "_GGA"]["time"].push(
         std::string(proto->gga(i).time().c_str(), 9));
     (*net_signals)[antenna_name + "_GGA"]["latitude"].push(
@@ -155,9 +155,9 @@ void gps_proto_deserialize(gps::GpsPack *proto, network_enums *net_enums,
         proto->gga(i).age_of_correction());
   }
   for (int i = 0; i < proto->vtg_size(); i++) {
-    if (shouldSkipSample("VTG", proto->vtg(i)._inner_timestamp())) continue;
-    (*net_signals)[antenna_name + "_VTG"]["_timestamp"].push(
-        proto->vtg(i)._inner_timestamp());
+    if (shouldSkipSample("VTG", proto->vtg(i).timestamp())) continue;
+    (*net_signals)[antenna_name + "_VTG"]["timestamp"].push(
+        proto->vtg(i).timestamp());
     (*net_signals)[antenna_name + "_VTG"]["course_over_ground_degrees"].push(
         proto->vtg(i).course_over_ground_degrees());
     (*net_signals)[antenna_name + "_VTG"]["course_over_ground_degrees_magnetic"]
@@ -166,9 +166,9 @@ void gps_proto_deserialize(gps::GpsPack *proto, network_enums *net_enums,
         proto->vtg(i).speed_kmh());
   }
   for (int i = 0; i < proto->gsa_size(); i++) {
-    if (shouldSkipSample("GSA", proto->gsa(i)._inner_timestamp())) continue;
-    (*net_signals)[antenna_name + "_GSA"]["_timestamp"].push(
-        proto->gsa(i)._inner_timestamp());
+    if (shouldSkipSample("GSA", proto->gsa(i).timestamp())) continue;
+    (*net_signals)[antenna_name + "_GSA"]["timestamp"].push(
+        proto->gsa(i).timestamp());
     (*net_strings)[antenna_name + "_GSA"]["mode"].push(proto->gsa(i).mode());
     (*net_signals)[antenna_name + "_GSA"]["position_diluition_precision"].push(
         proto->gsa(i).position_diluition_precision());
@@ -179,9 +179,9 @@ void gps_proto_deserialize(gps::GpsPack *proto, network_enums *net_enums,
   }
 
   for (int i = 0; i < proto->dop_size(); i++) {
-    if (shouldSkipSample("DOP", proto->dop(i)._inner_timestamp())) continue;
-    (*net_signals)[antenna_name + "_DOP"]["_timestamp"].push(
-        proto->dop(i)._inner_timestamp());
+    if (shouldSkipSample("DOP", proto->dop(i).timestamp())) continue;
+    (*net_signals)[antenna_name + "_DOP"]["timestamp"].push(
+        proto->dop(i).timestamp());
     (*net_signals)[antenna_name + "_DOP"]["iTOW"].push(proto->dop(i).itow());
     (*net_signals)[antenna_name + "_DOP"]["gDOP"].push(proto->dop(i).gdop());
     (*net_signals)[antenna_name + "_DOP"]["pDOP"].push(proto->dop(i).pdop());
@@ -192,9 +192,9 @@ void gps_proto_deserialize(gps::GpsPack *proto, network_enums *net_enums,
     (*net_signals)[antenna_name + "_DOP"]["eDOP"].push(proto->dop(i).edop());
   }
   for (int i = 0; i < proto->pvt_size(); i++) {
-    if (shouldSkipSample("PVT", proto->pvt(i)._inner_timestamp())) continue;
-    (*net_signals)[antenna_name + "_PVT"]["_timestamp"].push(
-        proto->pvt(i)._inner_timestamp());
+    if (shouldSkipSample("PVT", proto->pvt(i).timestamp())) continue;
+    (*net_signals)[antenna_name + "_PVT"]["timestamp"].push(
+        proto->pvt(i).timestamp());
     (*net_signals)[antenna_name + "_PVT"]["iTOW"].push(proto->pvt(i).itow());
     (*net_signals)[antenna_name + "_PVT"]["year"].push(proto->pvt(i).year());
     (*net_signals)[antenna_name + "_PVT"]["month"].push(proto->pvt(i).month());
@@ -237,10 +237,10 @@ void gps_proto_deserialize(gps::GpsPack *proto, network_enums *net_enums,
         proto->pvt(i).magacc());
   }
   for (int i = 0; i < proto->hpposecef_size(); i++) {
-    if (shouldSkipSample("HPPOSECEF", proto->hpposecef(i)._inner_timestamp()))
+    if (shouldSkipSample("HPPOSECEF", proto->hpposecef(i).timestamp()))
       continue;
-    (*net_signals)[antenna_name + "_HPPOSECEF"]["_timestamp"].push(
-        proto->hpposecef(i)._inner_timestamp());
+    (*net_signals)[antenna_name + "_HPPOSECEF"]["timestamp"].push(
+        proto->hpposecef(i).timestamp());
     (*net_signals)[antenna_name + "_HPPOSECEF"]["version"].push(
         proto->hpposecef(i).version());
     (*net_signals)[antenna_name + "_HPPOSECEF"]["iTOW"].push(
@@ -261,10 +261,9 @@ void gps_proto_deserialize(gps::GpsPack *proto, network_enums *net_enums,
         proto->hpposecef(i).pacc());
   }
   for (int i = 0; i < proto->hpposllh_size(); i++) {
-    if (shouldSkipSample("HPPOSLLH", proto->hpposllh(i)._inner_timestamp()))
-      continue;
-    (*net_signals)[antenna_name + "_HPPOSLLH"]["_timestamp"].push(
-        proto->hpposllh(i)._inner_timestamp());
+    if (shouldSkipSample("HPPOSLLH", proto->hpposllh(i).timestamp())) continue;
+    (*net_signals)[antenna_name + "_HPPOSLLH"]["timestamp"].push(
+        proto->hpposllh(i).timestamp());
     (*net_signals)[antenna_name + "_HPPOSLLH"]["version"].push(
         proto->hpposllh(i).version());
     (*net_signals)[antenna_name + "_HPPOSLLH"]["iTOW"].push(
@@ -291,10 +290,10 @@ void gps_proto_deserialize(gps::GpsPack *proto, network_enums *net_enums,
         proto->hpposllh(i).vacc());
   }
   for (int i = 0; i < proto->relposned_size(); i++) {
-    if (shouldSkipSample("RELPOSNED", proto->relposned(i)._inner_timestamp()))
+    if (shouldSkipSample("RELPOSNED", proto->relposned(i).timestamp()))
       continue;
-    (*net_signals)[antenna_name + "_RELPOSNED"]["_timestamp"].push(
-        proto->relposned(i)._inner_timestamp());
+    (*net_signals)[antenna_name + "_RELPOSNED"]["timestamp"].push(
+        proto->relposned(i).timestamp());
     (*net_signals)[antenna_name + "_RELPOSNED"]["version"].push(
         proto->relposned(i).version());
     (*net_signals)[antenna_name + "_RELPOSNED"]["refStationId"].push(
@@ -333,10 +332,9 @@ void gps_proto_deserialize(gps::GpsPack *proto, network_enums *net_enums,
         proto->relposned(i).flags());
   }
   for (int i = 0; i < proto->velned_size(); i++) {
-    if (shouldSkipSample("VELNED", proto->velned(i)._inner_timestamp()))
-      continue;
-    (*net_signals)[antenna_name + "_VELNED"]["_timestamp"].push(
-        proto->velned(i)._inner_timestamp());
+    if (shouldSkipSample("VELNED", proto->velned(i).timestamp())) continue;
+    (*net_signals)[antenna_name + "_VELNED"]["timestamp"].push(
+        proto->velned(i).timestamp());
     (*net_signals)[antenna_name + "_VELNED"]["iTOW"].push(
         proto->velned(i).itow());
     (*net_signals)[antenna_name + "_VELNED"]["velN"].push(
@@ -357,10 +355,9 @@ void gps_proto_deserialize(gps::GpsPack *proto, network_enums *net_enums,
         proto->velned(i).cacc());
   }
   for (int i = 0; i < proto->heading_size(); i++) {
-    if (shouldSkipSample("HEADING", proto->heading(i)._inner_timestamp()))
-      continue;
-    (*net_signals)[antenna_name + "_HEADING"]["_timestamp"].push(
-        proto->heading(i)._inner_timestamp());
+    if (shouldSkipSample("HEADING", proto->heading(i).timestamp())) continue;
+    (*net_signals)[antenna_name + "_HEADING"]["timestamp"].push(
+        proto->heading(i).timestamp());
     (*net_signals)[antenna_name + "_HEADING"]["iTOW"].push(
         proto->heading(i).itow());
     (*net_signals)[antenna_name + "_HEADING"]["heading"].push(
@@ -373,7 +370,7 @@ void gps_proto_deserialize(gps::GpsPack *proto, network_enums *net_enums,
 }
 
 void gps_serialize_gga(gps::GGA *proto, gps_nmea_gga_t *data) {
-  proto->set__inner_timestamp(data->_timestamp);
+  proto->set_timestamp(data->timestamp);
   proto->set_time(data->time);
   proto->set_latitude(data->latitude);
   // proto->set_north_south(std::string(data->north_south, 1));
@@ -387,14 +384,14 @@ void gps_serialize_gga(gps::GGA *proto, gps_nmea_gga_t *data) {
   proto->set_age_of_correction(data->age_of_correction);
 }
 void gps_serialize_vtg(gps::VTG *proto, gps_nmea_vtg_t *data) {
-  proto->set__inner_timestamp(data->_timestamp);
+  proto->set_timestamp(data->timestamp);
   proto->set_course_over_ground_degrees(data->course_over_ground_degrees);
   proto->set_course_over_ground_degrees_magnetic(
       data->course_over_ground_degrees_magnetic);
   proto->set_speed_kmh(data->speed_kmh);
 }
 void gps_serialize_gsa(gps::GSA *proto, gps_nmea_gsa_t *data) {
-  proto->set__inner_timestamp(data->_timestamp);
+  proto->set_timestamp(data->timestamp);
   proto->set_mode(std::string(data->mode, 1));
   proto->set_position_diluition_precision(data->position_diluition_precision);
   proto->set_horizontal_diluition_precision(
@@ -403,7 +400,7 @@ void gps_serialize_gsa(gps::GSA *proto, gps_nmea_gsa_t *data) {
 }
 
 void gps_serialize_dop(gps::NAV_DOP *proto, gps_ubx_dop_t *data) {
-  proto->set__inner_timestamp(data->_timestamp);
+  proto->set_timestamp(data->timestamp);
   proto->set_itow(data->iTOW);
   proto->set_gdop(data->gDOP);
   proto->set_pdop(data->pDOP);
@@ -414,7 +411,7 @@ void gps_serialize_dop(gps::NAV_DOP *proto, gps_ubx_dop_t *data) {
   proto->set_edop(data->eDOP);
 }
 void gps_serialize_pvt(gps::NAV_PVT *proto, gps_ubx_pvt_t *data) {
-  proto->set__inner_timestamp(data->_timestamp);
+  proto->set_timestamp(data->timestamp);
   proto->set_itow(data->iTOW);
   proto->set_year(data->year);
   proto->set_month(data->month);
@@ -449,7 +446,7 @@ void gps_serialize_pvt(gps::NAV_PVT *proto, gps_ubx_pvt_t *data) {
 }
 void gps_serialize_hpposecef(gps::NAV_HPPOSECEF *proto,
                              gps_ubx_hpposecef_t *data) {
-  proto->set__inner_timestamp(data->_timestamp);
+  proto->set_timestamp(data->timestamp);
   proto->set_version(data->version);
   proto->set_itow(data->iTOW);
   proto->set_ecefx(data->ecefX);
@@ -462,7 +459,7 @@ void gps_serialize_hpposecef(gps::NAV_HPPOSECEF *proto,
 }
 void gps_serialize_hpposllh(gps::NAV_HPPOSLLH *proto,
                             gps_ubx_hpposllh_t *data) {
-  proto->set__inner_timestamp(data->_timestamp);
+  proto->set_timestamp(data->timestamp);
   proto->set_version(data->version);
   proto->set_itow(data->iTOW);
   proto->set_lon(data->lon);
@@ -478,7 +475,7 @@ void gps_serialize_hpposllh(gps::NAV_HPPOSLLH *proto,
 }
 void gps_serialize_relposned(gps::NAV_RELPOSNED *proto,
                              gps_ubx_relposned_t *data) {
-  proto->set__inner_timestamp(data->_timestamp);
+  proto->set_timestamp(data->timestamp);
   proto->set_version(data->version);
   proto->set_refstationid(data->refStationId);
   proto->set_itow(data->iTOW);
@@ -499,7 +496,7 @@ void gps_serialize_relposned(gps::NAV_RELPOSNED *proto,
   proto->set_flags(data->flags);
 }
 void gps_serialize_velned(gps::NAV_VELNED *proto, gps_ubx_velned_t *data) {
-  proto->set__inner_timestamp(data->_timestamp);
+  proto->set_timestamp(data->timestamp);
   proto->set_itow(data->iTOW);
   proto->set_veln(data->velN);
   proto->set_vele(data->velE);
@@ -512,7 +509,7 @@ void gps_serialize_velned(gps::NAV_VELNED *proto, gps_ubx_velned_t *data) {
 }
 
 void gps_serialize_heading(gps::HEADING *proto, gps_heading_t *data) {
-  proto->set__inner_timestamp(data->_timestamp);
+  proto->set_timestamp(data->timestamp);
   proto->set_itow(data->iTOW);
   proto->set_heading(data->heading);
   proto->set_heading_stddev(data->heading_stddev);

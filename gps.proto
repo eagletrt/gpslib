@@ -3,7 +3,7 @@ syntax = "proto3";
 package gps;
 
 message GGA {
-  uint64 _inner_timestamp = 1;
+  uint64 timestamp = 1;
   bytes time = 2;
   double latitude = 3;
   string north_south = 4;
@@ -17,14 +17,14 @@ message GGA {
 };
 
 message VTG {
-  uint64 _inner_timestamp = 1;
+  uint64 timestamp = 1;
   double course_over_ground_degrees = 2;
   double course_over_ground_degrees_magnetic = 3;
   double speed_kmh = 4;
 };
 
 message GSA {
-  uint64 _inner_timestamp = 1;
+  uint64 timestamp = 1;
   string mode = 2;
   double position_diluition_precision = 3;
   double horizontal_diluition_precision = 4;
@@ -32,7 +32,7 @@ message GSA {
 };
 
 message NAV_DOP {
-  uint64 _inner_timestamp = 1;
+  uint64 timestamp = 1;
   uint64 iTOW = 2;
   double gDOP = 3;
   double pDOP = 4;
@@ -44,7 +44,7 @@ message NAV_DOP {
 };
 
 message NAV_PVT {
-  uint64 _inner_timestamp = 1;
+  uint64 timestamp = 1;
   uint32 iTOW = 2;
   uint32 year = 3;
   uint32 month = 4;
@@ -79,7 +79,7 @@ message NAV_PVT {
 };
 
 message NAV_HPPOSECEF {
-  uint64 _inner_timestamp = 1;
+  uint64 timestamp = 1;
   uint32 version = 2;
   uint32 iTOW = 3;
   double ecefX = 4;
@@ -92,7 +92,7 @@ message NAV_HPPOSECEF {
 };
 
 message NAV_HPPOSLLH {
-  uint64 _inner_timestamp = 1;
+  uint64 timestamp = 1;
   uint32 version = 2;
   uint32 iTOW = 3;
   double lon = 4;
@@ -108,7 +108,7 @@ message NAV_HPPOSLLH {
 };
 
 message NAV_RELPOSNED {
-  uint64 _inner_timestamp = 1;
+  uint64 timestamp = 1;
   uint32 version = 2;
   uint32 refStationId = 3;
   uint64 iTOW = 4;
@@ -130,7 +130,7 @@ message NAV_RELPOSNED {
 };
 
 message NAV_VELNED {
-  uint64 _inner_timestamp = 1;
+  uint64 timestamp = 1;
   uint32 iTOW = 2;
   double velN = 3;
   double velE = 4;
@@ -143,7 +143,7 @@ message NAV_VELNED {
 }
 
 message HEADING {
-  uint64 _inner_timestamp = 1;
+  uint64 timestamp = 1;
   uint32 iTOW = 2;
   double heading = 3;
   double heading_stddev = 4;
