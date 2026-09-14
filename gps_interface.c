@@ -137,6 +137,7 @@ void gps_interface_initialize(gps_serial_port *port) {
   port->read_offset = 0;
   port->first_log_timestamp = 0;
   port->first_real_timestamp = 0;
+  port->should_exit = 0;
   port->ctx = NULL;
 }
 
@@ -646,11 +647,22 @@ gps_protocol_type do_get_line(
     if (port->first_log_timestamp == 0)
       port->first_log_timestamp = port->timestamp;
     if (sleep) {
-      if (port->timestamp - port->first_log_timestamp >
-          get_real_timestamp() - port->first_real_timestamp) {
-        usleep(port->timestamp - port->first_log_timestamp -
-               (get_real_timestamp() - port->first_real_timestamp));
+      /* Signed on purpose: these are three uint64_t, and the moment the two
+         clocks disagree in the wrong direction the difference wraps around
+         into a sleep of a few hundred thousand years.
+         Slept in slices so that gps_interface_interrupt is noticed within one
+         slice instead of at the end of the gap, which is what lets a reader
+         thread be stopped in the middle of a log. */
+      const int64_t slice_us = 50000;
+      int64_t remaining =
+          (int64_t)(port->timestamp - port->first_log_timestamp) -
+          (int64_t)(get_real_timestamp() - port->first_real_timestamp);
+      while (remaining > 0 && !port->should_exit) {
+        usleep((useconds_t)(remaining > slice_us ? slice_us : remaining));
+        remaining = (int64_t)(port->timestamp - port->first_log_timestamp) -
+                    (int64_t)(get_real_timestamp() - port->first_real_timestamp);
       }
+      if (port->should_exit) return GPS_PROTOCOL_TYPE_SIZE;
     }
   } else {
     port->timestamp = get_real_timestamp();
@@ -798,6 +810,9 @@ gps_protocol_type gps_interface_get_line(
 }
 
 void gps_interface_interrupt(gps_serial_port *port) {
+  /* First of all, so whoever is pacing a log replay stops sleeping: closing
+     the fd does not wake a thread that is already inside usleep. */
+  port->should_exit = 1;
   if (port->type == SERVER && port->ctx != NULL) {
     gps_server_ctx *ctx = port->ctx;
     ctx->should_exit = 1;

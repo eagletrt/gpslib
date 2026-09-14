@@ -27,6 +27,10 @@ typedef struct gps_serial_port {
   uint64_t first_log_timestamp;
   uint64_t first_real_timestamp;
   off_t read_offset;
+  /* Set by gps_interface_interrupt: makes the log-replay pacing give up
+     instead of sleeping out the whole gap, so a reader thread can be joined
+     without waiting for the rest of the log. */
+  volatile int should_exit;
   gps_server_ctx *ctx;
 } gps_serial_port;
 
