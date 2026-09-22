@@ -833,8 +833,11 @@ void gps_interface_interrupt(gps_serial_port *port) {
     }
   } else {
     if (port->fd >= 0) {
-      close(port->fd);
-      port->fd = -1;
+     
+      if (shutdown(port->fd, SHUT_RDWR) != 0) {
+        close(port->fd);
+        port->fd = -1;
+      }
     }
   }
 }
