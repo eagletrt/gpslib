@@ -672,6 +672,14 @@ gps_protocol_type do_get_line(gps_serial_port *port, unsigned char start_sequenc
         continue;
       } else if (c == CLK_B && previous_clk_a == 1)
         break;
+      /* The raw logs the telemetry writes keep each NMEA sentence without its
+         CR LF, followed by a NUL and a bare LF. Stopping only at CR LF made a
+         log replay read on past the sentence and swallow the records behind
+         it, the next epoch's NAV-PVT among them: the estimator then never got
+         a speed or a course and fused no GPS at all. Neither byte can be part
+         of a sentence. */
+      else if (c == '\0' || c == CLK_B)
+        break;
       else {
         previous_clk_a = 0;
         line[size] = c;
@@ -785,8 +793,11 @@ void gps_interface_interrupt(gps_serial_port *port) {
     }
   } else {
     if (port->fd >= 0) {
-      close(port->fd);
-      port->fd = -1;
+     
+      if (shutdown(port->fd, SHUT_RDWR) != 0) {
+        close(port->fd);
+        port->fd = -1;
+      }
     }
   }
 }
