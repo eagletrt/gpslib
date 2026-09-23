@@ -1,4 +1,5 @@
 #include "gps_interface.h"
+
 #include <arpa/inet.h>
 #include <errno.h>
 #include <fcntl.h>
@@ -17,8 +18,7 @@
 #define CLK_A 0x0D
 #define CLK_B 0x0A
 
-void broadcast_to_clients(gps_server_ctx *ctx, const char *data, const int len,
-                          const int port_idx) {
+void broadcast_to_clients(gps_server_ctx *ctx, const char *data, const int len, const int port_idx) {
   if (!ctx || ctx->client_count == 0) return;
 
   pthread_mutex_lock(&ctx->clients_mutex);
@@ -38,15 +38,13 @@ void broadcast_to_clients(gps_server_ctx *ctx, const char *data, const int len,
         ctx->client_fails[i] = MAX_FAILS;
       } else {
         ctx->client_fails[i]++;
-        printf("[Server] Client %d send failed (Strike %d/%d)", i,
-               ctx->client_fails[i], MAX_FAILS);
+        printf("[Server] Client %d send failed (Strike %d/%d)", i, ctx->client_fails[i], MAX_FAILS);
       }
       if (ctx->client_fails[i] >= MAX_FAILS) {
         close(sock);
         ctx->client_sockets[i] = ctx->client_sockets[ctx->client_count - 1];
         ctx->client_fails[i] = ctx->client_fails[ctx->client_count - 1];
-        ctx->client_port_index[i] =
-            ctx->client_port_index[ctx->client_count - 1];
+        ctx->client_port_index[i] = ctx->client_port_index[ctx->client_count - 1];
         ctx->client_count--;
         i--;
       }
@@ -66,8 +64,7 @@ void *acceptThreadFunc(void *arg) {
 
   while (!ctx->should_exit) {
     for (int i = 0; i < ctx->n_port && !ctx->should_exit; i++) {
-      int new_sock = accept(ctx->server_socket_fd[i],
-                            (struct sockaddr *)&client_addr, &addr_len);
+      int new_sock = accept(ctx->server_socket_fd[i], (struct sockaddr *)&client_addr, &addr_len);
       if (new_sock < 0) {
         if (errno == EWOULDBLOCK || errno == EAGAIN) {
           continue;
@@ -84,11 +81,9 @@ void *acceptThreadFunc(void *arg) {
         ctx->client_fails[ctx->client_count] = 0;
         ctx->client_port_index[ctx->client_count] = i;
         ctx->client_sockets[ctx->client_count++] = new_sock;
-        printf("[Server] New Client Connected: %s (Total: %d)\n",
-               inet_ntoa(client_addr.sin_addr), ctx->client_count);
+        printf("[Server] New Client Connected: %s (Total: %d)\n", inet_ntoa(client_addr.sin_addr), ctx->client_count);
       } else {
-        printf("[Server] Max clients reached. Rejecting %s\n",
-               inet_ntoa(client_addr.sin_addr));
+        printf("[Server] Max clients reached. Rejecting %s\n", inet_ntoa(client_addr.sin_addr));
         close(new_sock);
       }
       pthread_mutex_unlock(&ctx->clients_mutex);
@@ -175,8 +170,7 @@ int gps_get_timestamp(gps_serial_port *port, uint64_t *timestamp) {
   return 0;
 }
 
-int gps_interface_open(gps_serial_port *port, const gps_interface_desc *desc,
-                       const int **tcp_ports, const int n_port,
+int gps_interface_open(gps_serial_port *port, const gps_interface_desc *desc, const int **tcp_ports, const int n_port,
                        enum SERIAL_MODE type) {
   if (!port || !desc) return -1;
 
@@ -213,8 +207,7 @@ int gps_interface_open(gps_serial_port *port, const gps_interface_desc *desc,
   }
 }
 
-int gps_interface_open_log_file(gps_serial_port *new_serial_port,
-                                const char *filename) {
+int gps_interface_open_log_file(gps_serial_port *new_serial_port, const char *filename) {
   if (filename == NULL) return -1;
   gps_interface_close(new_serial_port);
 
@@ -236,8 +229,7 @@ int gps_interface_open_log_file(gps_serial_port *new_serial_port,
   return 0;
 }
 
-int gps_interface_open_serial_port(gps_serial_port *new_serial_port,
-                                   const char *port, speed_t speed) {
+int gps_interface_open_serial_port(gps_serial_port *new_serial_port, const char *port, speed_t speed) {
   if (port == NULL) return -1;
 
   new_serial_port->open = 0;
@@ -274,29 +266,24 @@ int gps_interface_open_serial_port(gps_serial_port *new_serial_port,
   tty.c_lflag &= ~ICANON;  // disable canonical mode, in canonical mode input
                            // data is received line by line, usually undesired
                            // when dealing with serial ports
-  tty.c_lflag &=
-      ~ECHO;  // if this bit (ECHO) is set, sent characters will be echoed back.
+  tty.c_lflag &= ~ECHO;    // if this bit (ECHO) is set, sent characters will be echoed back.
   tty.c_lflag &= ~ECHOE;
   tty.c_lflag &= ~ECHONL;
-  tty.c_lflag &=
-      ~ISIG;  // when the ISIG bit is set, INTR,QUIT and SUSP characters are
-              // interpreted. we don't want this with a serial port
+  tty.c_lflag &= ~ISIG;  // when the ISIG bit is set, INTR,QUIT and SUSP characters are
+                         // interpreted. we don't want this with a serial port
   // the c_iflag member of the termios struct contains low-level settings for
   // input processing.n the c_iflag member is an int
+  tty.c_iflag &= ~(IXON | IXOFF | IXANY);  // clearing IXON,IXOFF,IXANY disable software flow control
   tty.c_iflag &=
-      ~(IXON | IXOFF |
-        IXANY);  // clearing IXON,IXOFF,IXANY disable software flow control
-  tty.c_iflag &= ~(IGNBRK | BRKINT | PARMRK | ISTRIP | INLCR | IGNCR |
-                   ICRNL);  // clearing all of this bits disable any special
-                            // handling of received bytes, i want raw data
+      ~(IGNBRK | BRKINT | PARMRK | ISTRIP | INLCR | IGNCR | ICRNL);  // clearing all of this bits disable any special
+                                                                     // handling of received bytes, i want raw data
   // output moYES, delete/reject them. If your goal is to test if a GPS device
   // is following the rules (like a QA tool), you should flag these messages as
   // errors. The device is buggy if it sends only \n.des (c_oflag). the c_oflag
   // member of the termios struct contain low level settings for output
   // processing, we want to disable any special handling of output chars/bytes
   tty.c_oflag &= ~OPOST;  // prevent special interpretation of output bytes
-  tty.c_oflag &=
-      ~ONLCR;  // prevent conversion of newline to carriage return/line feed
+  tty.c_oflag &= ~ONLCR;  // prevent conversion of newline to carriage return/line feed
   // setting VTIME VMIN
   tty.c_cc[VTIME] = 10;  // read() will block until either any amount of data is
                          // received or the timeout ocurs
@@ -334,8 +321,7 @@ int gps_interface_open_udp(gps_serial_port *port, const int udp_port) {
 
   int reuse = 1;
   // Enable address reuse to allow multiple clients to bind to the same port
-  if (setsockopt(port->fd, SOL_SOCKET, SO_REUSEADDR, (const void *)&reuse,
-                 sizeof(reuse)) < 0) {
+  if (setsockopt(port->fd, SOL_SOCKET, SO_REUSEADDR, (const void *)&reuse, sizeof(reuse)) < 0) {
     perror("Setting SO_REUSEADDR failed");
     close(port->fd);
     exit(EXIT_FAILURE);
@@ -362,16 +348,14 @@ void free_interfaces(gps_serial_port **interfaces, int count) {
   free(interfaces);
 }
 
-int gps_interface_open_server(gps_serial_port *new_serial_port,
-                              const gps_interface_desc *descs,
-                              const int **tcp_ports, const int n_port) {
+int gps_interface_open_server(gps_serial_port *new_serial_port, const gps_interface_desc *descs, const int **tcp_ports,
+                              const int n_port) {
   if (!new_serial_port || !tcp_ports || !descs || n_port <= 0) return -1;
 
   for (int i = 0; i < n_port; i++) {
     if (!tcp_ports[i]) return -1;
     if (descs[i].type == SERVER || descs[i].type == CLIENT) {
-      printf("GPS Server: invalid inner interface type %d at index %d\n",
-             descs[i].type, i);
+      printf("GPS Server: invalid inner interface type %d at index %d\n", descs[i].type, i);
       return -1;
     }
   }
@@ -390,8 +374,7 @@ int gps_interface_open_server(gps_serial_port *new_serial_port,
     }
     gps_interface_initialize(interfaces[i]);
 
-    if (gps_interface_open(interfaces[i], &descs[i], NULL, 0, descs[i].type) <
-        0) {
+    if (gps_interface_open(interfaces[i], &descs[i], NULL, 0, descs[i].type) < 0) {
       printf("GPS Server: failed to open interface %d\n", i);
       free_interfaces(interfaces, i + 1);
       return -1;
@@ -438,8 +421,7 @@ int gps_interface_open_server(gps_serial_port *new_serial_port,
     }
 
     int opt = 1;
-    if (setsockopt(ctx->server_socket_fd[i], SOL_SOCKET, SO_REUSEADDR, &opt,
-                   sizeof(opt)) < 0) {
+    if (setsockopt(ctx->server_socket_fd[i], SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) < 0) {
       perror("GPS Server: Setsockopt failed\n");
       pthread_mutex_destroy(&ctx->clients_mutex);
       for (int j = 0; j <= i; j++) {
@@ -454,8 +436,7 @@ int gps_interface_open_server(gps_serial_port *new_serial_port,
     struct timeval timeout;
     timeout.tv_sec = 1;
     timeout.tv_usec = 0;
-    if (setsockopt(ctx->server_socket_fd[i], SOL_SOCKET, SO_RCVTIMEO, &timeout,
-                   sizeof(timeout)) < 0) {
+    if (setsockopt(ctx->server_socket_fd[i], SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout)) < 0) {
       perror("GPS Server: Setsocketopt timeout failed");
       pthread_mutex_destroy(&ctx->clients_mutex);
       for (int j = 0; j <= i; j++) {
@@ -472,8 +453,7 @@ int gps_interface_open_server(gps_serial_port *new_serial_port,
     addr.sin_addr.s_addr = INADDR_ANY;
     addr.sin_port = htons(*tcp_ports[i]);
 
-    if (bind(ctx->server_socket_fd[i], (struct sockaddr *)&addr, sizeof(addr)) <
-        0) {
+    if (bind(ctx->server_socket_fd[i], (struct sockaddr *)&addr, sizeof(addr)) < 0) {
       perror("GPS Server: Bind failed\n");
       pthread_mutex_destroy(&ctx->clients_mutex);
       for (int j = 0; j <= i; j++) {
@@ -498,8 +478,7 @@ int gps_interface_open_server(gps_serial_port *new_serial_port,
     }
   }
 
-  if (pthread_create(&ctx->acceptThread, NULL, acceptThreadFunc, (void *)ctx) !=
-      0) {
+  if (pthread_create(&ctx->acceptThread, NULL, acceptThreadFunc, (void *)ctx) != 0) {
     perror("GPS Server: Thread creation failed\n");
     pthread_mutex_destroy(&ctx->clients_mutex);
     for (int j = 0; j < n_port; j++) {
@@ -524,15 +503,13 @@ int gps_interface_open_server(gps_serial_port *new_serial_port,
     if (sp->type == USB || sp->type == LOG_FILE) {
       printf("port %d for the gps at %s\n", *tcp_ports[i], sp->id.path);
     } else {
-      printf("port %d for the gps at UDP port %d\n", *tcp_ports[i],
-             sp->id.net_port);
+      printf("port %d for the gps at UDP port %d\n", *tcp_ports[i], sp->id.net_port);
     }
   }
   return 0;
 }
 
-int gps_interface_open_client(gps_serial_port *new_serial_port,
-                              const char *ip_address, const int tcp_port) {
+int gps_interface_open_client(gps_serial_port *new_serial_port, const char *ip_address, const int tcp_port) {
   if (!new_serial_port || !ip_address || !tcp_port) return -1;
 
   gps_interface_initialize(new_serial_port);
@@ -558,8 +535,7 @@ int gps_interface_open_client(gps_serial_port *new_serial_port,
 
   printf("Client: Connecting to %s:%d...\n", ip_address, tcp_port);
 
-  if (connect(new_serial_port->fd, (struct sockaddr *)&serv_addr,
-              sizeof(serv_addr)) < 0) {
+  if (connect(new_serial_port->fd, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0) {
     perror("Client: Connection Failed");
     close(new_serial_port->fd);
     return -1;
@@ -620,18 +596,14 @@ void gps_interface_close(gps_serial_port *serial_port) {
   if (serial_port->fd >= 0) {
     close(serial_port->fd);
   }
-  if ((serial_port->type == USB || serial_port->type == LOG_FILE) &&
-      serial_port->id.path) {
+  if ((serial_port->type == USB || serial_port->type == LOG_FILE) && serial_port->id.path) {
     free(serial_port->id.path);
     serial_port->id.path = NULL;
   }
 }
 
-gps_protocol_type do_get_line(
-    gps_serial_port *port,
-    unsigned char start_sequence[GPS_MAX_START_SEQUENCE_SIZE],
-    int *start_sequence_size, char line[GPS_MAX_LINE_SIZE], int *line_size,
-    bool sleep) {
+gps_protocol_type do_get_line(gps_serial_port *port, unsigned char start_sequence[GPS_MAX_START_SEQUENCE_SIZE],
+                              int *start_sequence_size, char line[GPS_MAX_LINE_SIZE], int *line_size, bool sleep) {
   uint8_t c;
   int size = -1;
   *line_size = 0;
@@ -642,26 +614,13 @@ gps_protocol_type do_get_line(
   memset(line, 0, GPS_MAX_LINE_SIZE);
 
   if (port->type == LOG_FILE) {
-    if (gps_get_timestamp(port, &port->timestamp) != 0)
-      return GPS_PROTOCOL_TYPE_SIZE;
-    if (port->first_log_timestamp == 0)
-      port->first_log_timestamp = port->timestamp;
+    if (gps_get_timestamp(port, &port->timestamp) != 0) return GPS_PROTOCOL_TYPE_SIZE;
+    if (port->first_log_timestamp == 0) port->first_log_timestamp = port->timestamp;
     if (sleep) {
-      /* Signed on purpose: these are three uint64_t, and the moment the two
-         clocks disagree in the wrong direction the difference wraps around
-         into a sleep of a few hundred thousand years.
-         Slept in slices so that gps_interface_interrupt is noticed within one
-         slice instead of at the end of the gap, which is what lets a reader
-         thread be stopped in the middle of a log. */
-      const int64_t slice_us = 50000;
-      int64_t remaining =
-          (int64_t)(port->timestamp - port->first_log_timestamp) -
-          (int64_t)(get_real_timestamp() - port->first_real_timestamp);
-      while (remaining > 0 && !port->should_exit) {
-        usleep((useconds_t)(remaining > slice_us ? slice_us : remaining));
-        remaining = (int64_t)(port->timestamp - port->first_log_timestamp) -
-                    (int64_t)(get_real_timestamp() - port->first_real_timestamp);
+      if (port->timestamp - port->first_log_timestamp > get_real_timestamp() - port->first_real_timestamp) {
+        usleep(port->timestamp - port->first_log_timestamp - (get_real_timestamp() - port->first_real_timestamp));
       }
+
       if (port->should_exit) return GPS_PROTOCOL_TYPE_SIZE;
     }
   } else {
@@ -674,8 +633,7 @@ gps_protocol_type do_get_line(
     if (size == -1) {
       switch (c) {
         case GPS_UBX_SYNC_FIRST_BYTE:
-          if (gps_interface_read(port, &c, 1) <= 0)
-            return GPS_PROTOCOL_TYPE_SIZE;
+          if (gps_interface_read(port, &c, 1) <= 0) return GPS_PROTOCOL_TYPE_SIZE;
           if (c == GPS_UBX_SYNC_SECOND_BYTE) {
             type = GPS_PROTOCOL_TYPE_UBX;
             size = 0;
@@ -689,16 +647,13 @@ gps_protocol_type do_get_line(
           }
           break;
         case GPS_NMEA_SYNC_FIRST_BYTE:
-          if (gps_interface_read(port, &c, 1) <= 0)
-            return GPS_PROTOCOL_TYPE_SIZE;
-          if (c == GPS_NMEA_SYNC_SECOND_BYTE1 ||
-              c == GPS_NMEA_SYNC_SECOND_BYTE2) {
+          if (gps_interface_read(port, &c, 1) <= 0) return GPS_PROTOCOL_TYPE_SIZE;
+          if (c == GPS_NMEA_SYNC_SECOND_BYTE1 || c == GPS_NMEA_SYNC_SECOND_BYTE2) {
             type = GPS_PROTOCOL_TYPE_NMEA;
             size = 0;
             start_sequence[0] = GPS_NMEA_SYNC_FIRST_BYTE;
             start_sequence[1] = c;
-            if (gps_interface_read(port, &c, 1) <= 0)
-              return GPS_PROTOCOL_TYPE_SIZE;
+            if (gps_interface_read(port, &c, 1) <= 0) return GPS_PROTOCOL_TYPE_SIZE;
             start_sequence[2] = c;
             start_sequence[3] = 0x00;
             *start_sequence_size = 3;
@@ -744,11 +699,10 @@ gps_protocol_type do_get_line(
   return type;
 }
 
-gps_protocol_type gps_interface_get_line(
-    gps_serial_port *port,
-    unsigned char start_sequence[GPS_MAX_START_SEQUENCE_SIZE],
-    int *start_sequence_size, char line[GPS_MAX_LINE_SIZE], int *line_size,
-    bool sleep) {
+gps_protocol_type gps_interface_get_line(gps_serial_port *port,
+                                         unsigned char start_sequence[GPS_MAX_START_SEQUENCE_SIZE],
+                                         int *start_sequence_size, char line[GPS_MAX_LINE_SIZE], int *line_size,
+                                         bool sleep) {
   gps_protocol_type result = GPS_PROTOCOL_TYPE_SIZE;
   int i = 0;
 
@@ -761,11 +715,9 @@ gps_protocol_type gps_interface_get_line(
   int cur_start_size = 0, cur_line_size = 0;
 
   do {
-    gps_serial_port *active =
-        (port->type == SERVER) ? port->ctx->serial_port[i] : port;
+    gps_serial_port *active = (port->type == SERVER) ? port->ctx->serial_port[i] : port;
 
-    gps_protocol_type type = do_get_line(active, cur_start, &cur_start_size,
-                                         cur_line, &cur_line_size, sleep);
+    gps_protocol_type type = do_get_line(active, cur_start, &cur_start_size, cur_line, &cur_line_size, sleep);
 
     if (i == 0) {
       result = type;
