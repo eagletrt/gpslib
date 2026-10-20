@@ -1,8 +1,14 @@
 #include "gps.h"
 
+#include <limits.h>
 #include <math.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+#ifndef PATH_MAX
+#define PATH_MAX 4096
+#endif
 
 const char *gps_nmea_message_type_string(gps_nmea_message_type type) {
   switch (type) {
@@ -681,49 +687,52 @@ void gps_get_message_name(gps_protocol_and_message *match, char *buff) {
   }
 }
 
-void gps_construct_filename(char *dest, const char *path, char *helper_buff,
-                            gps_protocol_and_message *match) {
-  memset(dest, 0, strlen(dest));
-  memset(helper_buff, 0, strlen(helper_buff));
-  gps_get_message_name(match, helper_buff);
-  strcat(dest, path);
-  strcat(dest, "/GPS_");
-  strcat(dest, helper_buff);
-  strcat(dest, ".csv");
+#define GPS_MESSAGE_NAME_SIZE 32
+
+static int gps_construct_filename(char *dest, size_t dest_size,
+                                  const char *path,
+                                  gps_protocol_and_message *match) {
+  char name[GPS_MESSAGE_NAME_SIZE];
+  name[0] = '\0';
+  gps_get_message_name(match, name);
+  const int written = snprintf(dest, dest_size, "%s/GPS_%s.csv", path, name);
+  return (written < 0 || (size_t)written >= dest_size) ? -1 : 0;
 }
 
 int gps_open_files(gps_files_t *files, const char *path) {
-  const int message_size = 20;
-  const int filepath_size = 100;
-  char *message = (char *)malloc(message_size);
-  char *filepath = (char *)malloc(filepath_size);
+  char filepath[PATH_MAX];
   gps_protocol_and_message match;
+  memset(files, 0, sizeof(*files));
   match.protocol = GPS_PROTOCOL_TYPE_NMEA;
   for (int i = 0; i < GPS_NMEA_TYPE_SIZE; i++) {
     match.message = i;
-    gps_construct_filename(filepath, path, message, &match);
+    if (gps_construct_filename(filepath, sizeof(filepath), path, &match) != 0) {
+      printf("GPS: path too long: %s\n", path);
+      gps_close_files(files);
+      return -1;
+    }
     files->nmea[i] = fopen(filepath, "w");
     if (files->nmea[i] == NULL) {
       printf("GPS: could not open file %s\n", filepath);
-      free(message);
-      free(filepath);
+      gps_close_files(files);
       return -1;
     }
   }
   match.protocol = GPS_PROTOCOL_TYPE_UBX;
   for (int i = 0; i < GPS_UBX_TYPE_SIZE; i++) {
     match.message = i;
-    gps_construct_filename(filepath, path, message, &match);
+    if (gps_construct_filename(filepath, sizeof(filepath), path, &match) != 0) {
+      printf("GPS: path too long: %s\n", path);
+      gps_close_files(files);
+      return -1;
+    }
     files->ubx[i] = fopen(filepath, "w");
     if (files->ubx[i] == NULL) {
       printf("GPS: could not open file %s\n", filepath);
-      free(message);
-      free(filepath);
+      gps_close_files(files);
       return -1;
     }
   }
-  free(message);
-  free(filepath);
   return 0;
 }
 
